@@ -105,10 +105,14 @@ Users (or clients) can cancel an in-progress stream and optionally request the m
 - Q: Conversation persistence? → A: External database (D1 or third-party DB) for full conversation history persistence; conversations stored permanently and retrievable across sessions.
 - Q: User authentication & authorization? → A: Session-based tracking (anonymous users can create conversations; sessions tied to browser/device; no user accounts required). Balances traceability with MVP simplicity.
 
+### Session 2025-11-14 (Updated)
+
+- Q: Which AI provider to use (Anthropic Claude vs OpenAI-compatible APIs)? → A: **OpenRouter** (OpenAI-compatible API). Rationale: Unified API interface compatible with OpenAI SDK, supports multiple model providers (Claude, GPT-4, Llama, etc.), flexible routing, cost optimization via model selection. More flexible than single-provider lock-in (Anthropic), maintains same latency/reliability as direct API calls.
+
 ## Assumptions
 
-- An external AI inference provider is available and accessible from the runtime (provider choice is out of scope for this spec).
-- When the AI provider is unavailable or returns an error, the system returns an error chunk immediately (fail-fast behavior per clarification Q1).
+- **AI Provider**: OpenRouter (OpenAI-compatible REST API) is used for chat completions and streaming responses. OpenRouter provides unified access to multiple model providers, flexible model routing, and cost optimization.
+- When the AI provider (OpenRouter) is unavailable or returns an error, the system returns an error chunk immediately (fail-fast behavior per clarification Q1).
 - Chat input is text-only; images, files, and rich formatting are explicitly out of scope for MVP (per Q2).
 - Web UI is built using a modern frontend framework (React/Vue) deployed on Cloudflare Workers with component-based architecture (per Q3).
 - Conversation history is persisted in an external database (D1 or third-party); conversations are retrievable across user sessions indefinitely (per Q4).

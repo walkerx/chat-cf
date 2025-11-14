@@ -6,14 +6,21 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "chat-cf",
 	"main": "src/index.ts",
-	"compatibility_date": "2025-11-13",
+	"compatibility_date": "2025-11-14",
 	"assets": {
 		"binding": "ASSETS",
 		"directory": "./public"
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "chat-cf-db",
+			"database_id": "c83c4b24-993b-4a31-bac2-3e12b346bf8a"
+		}
+	]
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

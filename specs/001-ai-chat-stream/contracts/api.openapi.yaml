@@ -1,0 +1,386 @@
+openapi: 3.1.0
+
+info:
+  title: AI Chat (Streaming) API
+  version: 1.0.0
+  description: |
+    Cloudflare Workers API for AI chat with streaming output.
+    Supports multi-turn conversations with session-based user tracking.
+  contact:
+    name: chat-cf team
+
+servers:
+  - url: https://chat-cf.example.workers.dev
+    description: Production
+  - url: http://localhost:8787
+    description: Local development (wrangler dev)
+
+components:
+  schemas:
+    UUID:
+      type: string
+      format: uuid
+      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      example: 550e8400-e29b-41d4-a716-446655440000
+
+    ISO8601DateTime:
+      type: string
+      format: date-time
+      pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$'
+      example: '2025-11-14T10:30:00Z'
+
+    ClientSession:
+      type: object
+      required:
+        - id
+        - created_at
+        - last_activity
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        created_at:
+          $ref: '#/components/schemas/ISO8601DateTime'
+        last_activity:
+          $ref: '#/components/schemas/ISO8601DateTime'
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: number
+              - type: boolean
+
+    Conversation:
+      type: object
+      required:
+        - id
+        - session_id
+        - created_at
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        session_id:
+          $ref: '#/components/schemas/UUID'
+        title:
+          type: string
+          nullable: true
+          description: Auto-inferred conversation title (e.g., "Python debugging tips")
+        created_at:
+          $ref: '#/components/schemas/ISO8601DateTime'
+        updated_at:
+          $ref: '#/components/schemas/ISO8601DateTime'
+
+    Message:
+      type: object
+      required:
+        - id
+        - conversation_id
+        - role
+        - content
+        - created_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        conversation_id:
+          $ref: '#/components/schemas/UUID'
+        role:
+          type: string
+          enum: [user, assistant]
+          description: Message sender role
+        content:
+          type: string
+          description: Full message text (user prompt or assistant response)
+        created_at:
+          $ref: '#/components/schemas/ISO8601DateTime'
+
+    StreamChunk:
+      type: object
+      required:
+        - index
+        - text
+        - type
+        - timestamp
+      properties:
+        index:
+          type: integer
+          minimum: 0
+          description: Sequence number of chunk in stream (0-indexed)
+        text:
+          type: string
+          description: Partial response text from AI model
+        type:
+          type: string
+          enum: [content, error]
+          description: Chunk type (content or error message)
+        timestamp:
+          $ref: '#/components/schemas/ISO8601DateTime'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code (e.g., "INVALID_REQUEST", "RATE_LIMIT_EXCEEDED")
+        message:
+          type: string
+          description: Human-readable error message
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: INVALID_REQUEST
+            message: Missing required field 'prompt'
+
+    Unauthorized:
+      description: Missing or invalid session ID
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: UNAUTHORIZED
+            message: Session ID is required
+
+    RateLimited:
+      description: Too many requests from this session
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: RATE_LIMIT_EXCEEDED
+            message: Maximum 10 requests per minute exceeded
+
+    InternalError:
+      description: Server error (e.g., AI API failure, database error)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: INTERNAL_ERROR
+            message: 'AI API error: service temporarily unavailable'
+
+  parameters:
+    SessionIdHeader:
+      name: X-Session-ID
+      in: header
+      required: true
+      schema:
+        $ref: '#/components/schemas/UUID'
+      description: Session identifier (generated client-side via crypto.randomUUID() or provided by server)
+
+    SessionIdQuery:
+      name: sessionId
+      in: query
+      required: true
+      schema:
+        $ref: '#/components/schemas/UUID'
+      description: Session identifier for listing conversations
+
+paths:
+  /api/chat/stream:
+    post:
+      summary: Start a streaming AI chat response
+      description: |
+        Submit a user prompt and receive a streaming AI response via Server-Sent Events (SSE).
+        
+        The endpoint returns HTTP 200 with `Content-Type: text/event-stream` and sends chunks as:
+        ```
+        data: {"index": 0, "text": "...", "type": "content", "timestamp": "..."}
+        ```
+        
+        Client closes the stream when all chunks are received or by sending an AbortSignal.
+        After streaming completes, the client should POST the complete assistant message back
+        or the handler will auto-save the conversation.
+      operationId: streamChat
+      tags:
+        - Chat
+      parameters:
+        - $ref: '#/components/parameters/SessionIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  minLength: 1
+                  maxLength: 10000
+                  description: User's text prompt (text-only, no images/files)
+                conversationId:
+                  $ref: '#/components/schemas/UUID'
+                  nullable: true
+                  description: Optional existing conversation ID (if null, creates new conversation)
+            example:
+              prompt: How do I debug a Python memory leak?
+              conversationId: null
+      responses:
+        '200':
+          description: Streaming response opened (SSE format)
+          headers:
+            Content-Type:
+              schema:
+                type: string
+              example: text/event-stream
+            Cache-Control:
+              schema:
+                type: string
+              example: no-cache
+          content:
+            text/event-stream:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StreamChunk'
+              example: |
+                data: {"index": 0, "text": "Memory leaks in Python typically occur when objects are held in memory longer than", "type": "content", "timestamp": "2025-11-14T10:30:35.100Z"}
+                data: {"index": 1, "text": " expected.", "type": "content", "timestamp": "2025-11-14T10:30:35.150Z"}
+                data: {"index": 2, "text": " Here are common causes and solutions...", "type": "content", "timestamp": "2025-11-14T10:30:35.200Z"}
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/conversations:
+    get:
+      summary: List conversations for a session
+      description: |
+        Retrieve all conversations belonging to a session, ordered by most recent first.
+        Includes metadata (title, timestamps) but not messages.
+      operationId: listConversations
+      tags:
+        - Conversations
+      parameters:
+        - $ref: '#/components/parameters/SessionIdQuery'
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Maximum number of conversations to return
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - conversations
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversation'
+              example:
+                conversations:
+                  - id: conv-660e9400-e29b-41d4-a716-446655440111
+                    session_id: 550e8400-e29b-41d4-a716-446655440000
+                    title: Python debugging tips
+                    created_at: '2025-11-14T10:30:00Z'
+                    updated_at: '2025-11-14T10:45:30Z'
+                  - id: conv-660e9400-e29b-41d4-a716-446655440222
+                    session_id: 550e8400-e29b-41d4-a716-446655440000
+                    title: null
+                    created_at: '2025-11-14T10:00:00Z'
+                    updated_at: '2025-11-14T10:00:30Z'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/conversations/{conversationId}:
+    get:
+      summary: Load conversation history
+      description: |
+        Retrieve all messages in a conversation, ordered chronologically.
+      operationId: getConversation
+      tags:
+        - Conversations
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Conversation with full message history
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - conversation
+                  - messages
+                properties:
+                  conversation:
+                    $ref: '#/components/schemas/Conversation'
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+              example:
+                conversation:
+                  id: conv-660e9400-e29b-41d4-a716-446655440111
+                  session_id: 550e8400-e29b-41d4-a716-446655440000
+                  title: Python debugging tips
+                  created_at: '2025-11-14T10:30:00Z'
+                  updated_at: '2025-11-14T10:45:30Z'
+                messages:
+                  - id: msg-770e9400-e29b-41d4-a716-446655440222
+                    conversation_id: conv-660e9400-e29b-41d4-a716-446655440111
+                    role: user
+                    content: How do I debug a Python memory leak?
+                    created_at: '2025-11-14T10:30:05Z'
+                  - id: msg-770e9400-e29b-41d4-a716-446655440333
+                    conversation_id: conv-660e9400-e29b-41d4-a716-446655440111
+                    role: assistant
+                    content: Memory leaks in Python typically occur when objects are held in memory longer than expected...
+                    created_at: '2025-11-14T10:30:35Z'
+
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: NOT_FOUND
+                message: Conversation not found
+
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+tags:
+  - name: Chat
+    description: Real-time chat streaming endpoints
+  - name: Conversations
+    description: Conversation history and management
+
+x-logo:
+  url: https://www.cloudflare.com/favicon.ico

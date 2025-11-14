@@ -6,12 +6,22 @@
     "strict": true,
     "skipLibCheck": true,
     "lib": [
-      "ESNext"
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "types": [
         "./worker-configuration.d.ts"
-    ]
+    ],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
   },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "tests"]
 }
