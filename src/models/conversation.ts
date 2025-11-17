@@ -3,8 +3,6 @@
  * Represents a multi-turn chat session with an AI
  */
 
-import type { ClientSession } from "./client-session.js";
-
 export interface Conversation {
 	id: string; // UUID
 	session_id: string; // Foreign key to ClientSession.id
@@ -38,15 +36,4 @@ export function createConversation(
 	};
 }
 
-/**
- * Update conversation's updated_at timestamp
- */
-export function updateConversationTimestamp(
-	conversation: Conversation
-): Conversation {
-	return {
-		...conversation,
-		updated_at: new Date().toISOString(),
-	};
-}
 

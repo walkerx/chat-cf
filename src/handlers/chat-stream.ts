@@ -12,7 +12,6 @@ import { prepareContextForOpenRouter } from "../utils/prompt.js";
 import { createStandardErrorResponse, formatErrorAsStreamChunk } from "../utils/errors.js";
 import { generateConversationId } from "../models/conversation.js";
 import { generateMessageId } from "../models/message.js";
-import { createStreamChunk } from "../models/stream-chunk.js";
 
 /**
  * POST /api/chat/stream
@@ -62,7 +61,6 @@ export async function handleChatStream(
 
 	// Get or create conversation
 	let conversationId = body.conversationId;
-	let conversation;
 	let messageHistory: Array<{ role: string; content: string }> = [];
 
 	if (conversationId) {
@@ -77,12 +75,11 @@ export async function handleChatStream(
 			return c.json(createStandardErrorResponse("UNAUTHORIZED"), 401);
 		}
 
-		conversation = result.conversation;
 		messageHistory = prepareContextForOpenRouter(result.messages, prompt);
 	} else {
 		// Create new conversation
 		conversationId = generateConversationId();
-		conversation = await db.createConversation(conversationId, sessionId);
+		await db.createConversation(conversationId, sessionId);
 		messageHistory = [{ role: "user", content: prompt }];
 	}
 

@@ -8,7 +8,6 @@ import type { Context } from "hono";
 import type { CloudflareBindings } from "../../worker-configuration.js";
 import { DatabaseClient } from "../services/db.js";
 import { createStandardErrorResponse } from "../utils/errors.js";
-import { getOrGenerateSessionId } from "../utils/session.js";
 
 /**
  * GET /api/conversations?sessionId=...

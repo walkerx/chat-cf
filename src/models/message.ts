@@ -3,8 +3,6 @@
  * Represents an individual message (user or assistant) within a conversation
  */
 
-import type { Conversation } from "./conversation.js";
-
 export type MessageRole = "user" | "assistant";
 
 export interface Message {
