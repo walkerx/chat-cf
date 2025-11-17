@@ -39,35 +39,41 @@ pnpm install
 
 ### 1.2 Environment Variables
 
-Create a `.env.local` file in the project root (not committed to git):
+**For Local Development**:
+
+Create a `.dev.vars` file in the project root (not committed to git):
+
+```bash
+# Copy the example file
+cp .dev.vars.example .dev.vars
+```
+
+Then edit `.dev.vars` and add your API key:
 
 ```env
 # OpenRouter API (OpenAI-compatible)
 OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-# Optional: Analytics/monitoring
-ENVIRONMENT=development
 ```
 
 **How to get `OPENROUTER_API_KEY`**:
 1. Go to [OpenRouter Console](https://openrouter.ai/keys)
 2. Create an account or log in (supports GitHub, Google, email)
 3. Click **Create Key** or **Generate** for a new API key
-4. Copy the key and paste into `.env.local`
+4. Copy the key and paste into `.dev.vars`
 
 **Note**: OpenRouter provides unified access to 100+ models (Claude, GPT-4, Llama, Mistral, etc.) via OpenAI-compatible API.
 
-### 1.3 Store Secret (Wrangler)
+**For Production**:
 
-For local development, Wrangler reads from `wrangler.jsonc`. For production, use:
+Use Cloudflare Secrets Store (recommended for sensitive data):
 
 ```bash
-# Production only (after deploying to Cloudflare)
+# Set secret in Cloudflare (production)
 wrangler secret put OPENROUTER_API_KEY
 # Paste the key and press Ctrl+D (or Cmd+D on macOS)
 ```
 
-**Local dev**: Wrangler automatically loads `.env.local` during `pnpm run dev`.
+**Local dev**: Wrangler automatically loads `.dev.vars` during `pnpm run dev`.
 
 ### 1.4 Configure D1 Database
 

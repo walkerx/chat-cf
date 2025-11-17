@@ -43,11 +43,24 @@ export async function handleChatStream(
 
 	// Initialize services
 	const db = new DatabaseClient(c.env.DB);
+	
+	// Get API key from Cloudflare bindings (secrets or .dev.vars)
+	const apiKey = c.env.OPENROUTER_API_KEY;
+	if (!apiKey) {
+		return c.json(
+			createStandardErrorResponse("INTERNAL_ERROR"),
+			500
+		);
+	}
+	
 	const openRouter = new OpenRouterClient({
-		apiKey: c.env.OPENROUTER_API_KEY || "",
+		apiKey,
 	});
 
-	// Get or create session
+	// Ensure session exists in database (required for foreign key constraint)
+	await db.getOrCreateSession(sessionId);
+
+	// Get or create conversation
 	let conversationId = body.conversationId;
 	let conversation;
 	let messageHistory: Array<{ role: string; content: string }> = [];

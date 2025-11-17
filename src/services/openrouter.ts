@@ -29,6 +29,15 @@ export class OpenRouterClient {
 
 	constructor(config: OpenRouterConfig) {
 		this.baseUrl = config.baseUrl || "https://openrouter.ai/api/v1";
+		
+		// API key must be provided via Cloudflare bindings (c.env.OPENROUTER_API_KEY)
+		// For local dev, set it in .dev.vars or wrangler.jsonc vars
+		if (!config.apiKey) {
+			throw new Error(
+				"OPENROUTER_API_KEY is required. Set it via Cloudflare Secrets or .dev.vars for local development."
+			);
+		}
+		
 		this.apiKey = config.apiKey;
 		this.defaultModel = config.defaultModel || "anthropic/claude-3.5-sonnet";
 	}
@@ -99,7 +108,9 @@ export class OpenRouterClient {
 			);
 		}
 
-		const data = await response.json();
+		const data = (await response.json()) as {
+			choices?: Array<{ message?: { content?: string } }>;
+		};
 		return data.choices?.[0]?.message?.content || "";
 	}
 }

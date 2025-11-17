@@ -57,13 +57,15 @@ export async function loggerMiddleware(
 			JSON.stringify({
 				type: "response",
 				...logContext,
-				status: response.status,
+				status: response?.status || 500,
 				duration,
 			})
 		);
 
-		// Add request ID to response header
-		response.headers.set("X-Request-ID", requestId);
+		// Add request ID to response header (if response exists and has headers)
+		if (response && response.headers) {
+			response.headers.set("X-Request-ID", requestId);
+		}
 
 		return response;
 	} catch (error) {

@@ -1,0 +1,8 @@
+# Local development environment variables
+# Copy this file to .dev.vars and fill in your values
+# Wrangler automatically loads .dev.vars for local development
+
+# OpenRouter API Key (required)
+# Get your key from: https://openrouter.ai/keys
+OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
