@@ -17,12 +17,21 @@ export function App() {
 		sendMessage,
 		abortStream,
 		clearError,
+		startNewConversation,
 	} = useChat();
 
 	return (
 		<div className="app">
 			<header className="app-header">
 				<h1>AI Chat</h1>
+				<button
+					className="new-conversation-button"
+					onClick={startNewConversation}
+					disabled={isStreaming}
+					title="Start a new conversation"
+				>
+					+ New Conversation
+				</button>
 			</header>
 			<main className="app-main">
 				<ErrorDisplay error={error} onDismiss={clearError} />

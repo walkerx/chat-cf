@@ -67,7 +67,7 @@ export async function handleChatStream(
 	let messageHistory: ChatCompletionMessageParam[] = [];
 
 	if (conversationId) {
-		// Load existing conversation
+		// Explicit conversation ID provided - load it
 		const result = await db.getConversationWithMessages(conversationId);
 		if (!result) {
 			return c.json(createStandardErrorResponse("NOT_FOUND"), 404);
@@ -80,10 +80,25 @@ export async function handleChatStream(
 
 		messageHistory = prepareContextForOpenRouter(result.messages, prompt);
 	} else {
-		// Create new conversation
-		conversationId = generateConversationId();
-		await db.createConversation(conversationId, sessionId);
-		messageHistory = [{ role: "user", content: prompt }];
+		// No conversation ID provided - reuse active conversation or create new one
+		const activeConversation = await db.getActiveConversation(sessionId);
+		
+		if (activeConversation) {
+			// Reuse existing active conversation
+			conversationId = activeConversation.id;
+			const result = await db.getConversationWithMessages(conversationId);
+			if (result) {
+				messageHistory = prepareContextForOpenRouter(result.messages, prompt);
+			} else {
+				// Fallback if messages can't be loaded
+				messageHistory = [{ role: "user", content: prompt }];
+			}
+		} else {
+			// Create new conversation (first conversation for this session)
+			conversationId = generateConversationId();
+			await db.createConversation(conversationId, sessionId);
+			messageHistory = [{ role: "user", content: prompt }];
+		}
 	}
 
 	// Save user message
@@ -133,13 +148,16 @@ export async function handleChatStream(
 					}
 
 					// Send chunk to client
+					// Include conversationId in first chunk only for efficiency
 					const chunkData = `data: ${JSON.stringify({
-						index: chunkIndex++,
+						index: chunkIndex,
 						text: chunk.text,
 						type: chunk.type,
 						timestamp: chunk.timestamp,
+						...(chunkIndex === 0 ? { conversationId } : {}),
 					})}\n\n`;
 					controller.enqueue(encoder.encode(chunkData));
+					chunkIndex++;
 				}
 
 				// Save assistant message after streaming completes

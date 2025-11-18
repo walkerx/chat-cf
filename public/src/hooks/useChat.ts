@@ -3,10 +3,9 @@
  * Manage messages, streaming state, error state, conversation ID
  */
 
-import React, { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { Message } from "../../../src/models/message.js";
-import type { StreamChunk } from "../../../src/models/stream-chunk.js";
-import { streamChat } from "../services/api.js";
+import { streamChat, getConversation, listConversations } from "../services/api.js";
 import { getOrCreateSessionId } from "../services/session.js";
 import { generateMessageId } from "../../../src/models/message.js";
 
@@ -28,6 +27,7 @@ export interface UseChatReturn {
 	abortStream: () => void;
 	clearError: () => void;
 	setConversationId: (id: string | null) => void;
+	startNewConversation: () => void;
 }
 
 /**
@@ -40,6 +40,32 @@ export function useChat(): UseChatReturn {
 	const [conversationId, setConversationId] = useState<string | null>(null);
 	const [sessionId] = useState(() => getOrCreateSessionId());
 	const abortRef = useRef<(() => void) | null>(null);
+
+	// Load conversation history on mount
+	useEffect(() => {
+		async function loadHistory() {
+			try {
+				// Get the most recent conversation for this session
+				const conversations = await listConversations(sessionId);
+				
+				if (conversations.length > 0) {
+					const mostRecent = conversations[0];
+					const { messages: historyMessages } = await getConversation(
+						mostRecent.id,
+						sessionId
+					);
+					
+					setConversationId(mostRecent.id);
+					setMessages(historyMessages);
+				}
+			} catch (err) {
+				console.error("Failed to load conversation history:", err);
+				// Don't show error to user, just start fresh
+			}
+		}
+
+		loadHistory();
+	}, [sessionId]);
 
 	const sendMessage = useCallback(
 		async (prompt: string) => {
@@ -77,6 +103,11 @@ export function useChat(): UseChatReturn {
 				let fullContent = "";
 
 				for await (const chunk of chunks) {
+					// Extract conversationId from first chunk if present
+					if (chunk.conversationId && !conversationId) {
+						setConversationId(chunk.conversationId);
+					}
+
 					if (chunk.type === "error") {
 						// Handle error chunk
 						try {
@@ -95,7 +126,7 @@ export function useChat(): UseChatReturn {
 						if (!assistantMessage) {
 							assistantMessage = {
 								id: generateMessageId(),
-								conversation_id: conversationId || "",
+								conversation_id: chunk.conversationId || conversationId || "",
 								role: "assistant",
 								content: fullContent,
 								created_at: new Date().toISOString(),
@@ -113,9 +144,6 @@ export function useChat(): UseChatReturn {
 						}
 					}
 				}
-
-				// If we got a conversation ID from the response, update it
-				// (This would need to be added to the API response)
 			} catch (err) {
 				const errorMessage =
 					err instanceof Error ? err.message : "Failed to send message";
@@ -140,6 +168,12 @@ export function useChat(): UseChatReturn {
 		setError(null);
 	}, []);
 
+	const startNewConversation = useCallback(() => {
+		setConversationId(null);
+		setMessages([]);
+		setError(null);
+	}, []);
+
 	return {
 		messages,
 		isStreaming,
@@ -150,6 +184,7 @@ export function useChat(): UseChatReturn {
 		abortStream,
 		clearError,
 		setConversationId,
+		startNewConversation,
 	};
 }
 

@@ -10,6 +10,7 @@ export interface StreamChunk {
 	text: string; // Partial response text from AI model
 	type: StreamChunkType; // Either 'content' (text chunk) or 'error' (error message)
 	timestamp: string; // ISO 8601 timestamp when chunk was received
+	conversationId?: string; // Conversation ID (included only in first chunk)
 }
 
 /**
