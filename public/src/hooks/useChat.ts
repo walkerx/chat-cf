@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { Message } from "../../../src/models/message.js";
-import { streamChat, getConversation, listConversations } from "../services/api.js";
+import { streamChat, getConversation, listConversations, getCharacterCard } from "../services/api.js";
 import { getOrCreateSessionId } from "../services/session.js";
 import { generateMessageId } from "../../../src/models/message.js";
 
@@ -15,6 +15,8 @@ export interface ChatState {
 	error: string | null;
 	conversationId: string | null;
 	sessionId: string;
+	characterCardId: string | null;
+	characterGreeting: string | null;
 }
 
 export interface UseChatReturn {
@@ -23,10 +25,13 @@ export interface UseChatReturn {
 	error: string | null;
 	conversationId: string | null;
 	sessionId: string;
+	characterCardId: string | null;
+	characterGreeting: string | null;
 	sendMessage: (prompt: string) => Promise<void>;
 	abortStream: () => void;
 	clearError: () => void;
 	setConversationId: (id: string | null) => void;
+	setCharacterCardId: (id: string | null) => void;
 	startNewConversation: () => void;
 }
 
@@ -38,6 +43,8 @@ export function useChat(): UseChatReturn {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [conversationId, setConversationId] = useState<string | null>(null);
+	const [characterCardId, setCharacterCardId] = useState<string | null>(null);
+	const [characterGreeting, setCharacterGreeting] = useState<string | null>(null);
 	const [sessionId] = useState(() => getOrCreateSessionId());
 	const abortRef = useRef<(() => void) | null>(null);
 
@@ -67,9 +74,29 @@ export function useChat(): UseChatReturn {
 		loadHistory();
 	}, [sessionId]);
 
+	// Load character greeting when character card is selected
+	useEffect(() => {
+		async function loadCharacterGreeting() {
+			if (!characterCardId) {
+				setCharacterGreeting(null);
+				return;
+			}
+
+			try {
+				const card = await getCharacterCard(characterCardId);
+				setCharacterGreeting(card.data.data.first_mes);
+			} catch (err) {
+				console.error("Failed to load character greeting:", err);
+				setCharacterGreeting(null);
+			}
+		}
+
+		loadCharacterGreeting();
+	}, [characterCardId]);
+
 	const sendMessage = useCallback(
 		async (prompt: string) => {
-			if (!prompt.trim() || isStreaming) {
+			if (!prompt.trim()) {
 				return;
 			}
 
@@ -92,6 +119,7 @@ export function useChat(): UseChatReturn {
 					{
 						prompt,
 						conversationId: conversationId || undefined,
+						characterCardId: characterCardId || undefined,
 					},
 					sessionId
 				);
@@ -153,7 +181,7 @@ export function useChat(): UseChatReturn {
 				abortRef.current = null;
 			}
 		},
-		[conversationId, sessionId]
+		[conversationId, characterCardId, sessionId]
 	);
 
 	const abortStream = useCallback(() => {
@@ -172,6 +200,8 @@ export function useChat(): UseChatReturn {
 		setConversationId(null);
 		setMessages([]);
 		setError(null);
+		setCharacterGreeting(null);
+		// Keep characterCardId so new conversation uses same character
 	}, []);
 
 	return {
@@ -180,10 +210,13 @@ export function useChat(): UseChatReturn {
 		error,
 		conversationId,
 		sessionId,
+		characterCardId,
+		characterGreeting,
 		sendMessage,
 		abortStream,
 		clearError,
 		setConversationId,
+		setCharacterCardId,
 		startNewConversation,
 	};
 }

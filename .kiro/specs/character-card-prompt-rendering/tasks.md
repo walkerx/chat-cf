@@ -264,7 +264,7 @@
   - Test that example cards can be loaded and used
   - _Requirements: 6.2_
 
-- [ ] 14. Update frontend to support character cards
+- [x] 14. Update frontend to support character cards
   - Add character card selection UI component
   - Update chat request to include characterCardId
   - Display character name and greeting in UI

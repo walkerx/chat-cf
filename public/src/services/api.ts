@@ -13,6 +13,7 @@ const API_BASE = ""; // Relative to current origin
 export interface ChatStreamRequest {
 	prompt: string;
 	conversationId?: string;
+	characterCardId?: string;
 }
 
 export interface ChatStreamResponse {
@@ -131,6 +132,96 @@ export async function getConversation(
 			},
 		}
 	);
+
+	if (!response.ok) {
+		throw new Error(`API error: ${response.status} ${response.statusText}`);
+	}
+
+	return await response.json();
+}
+
+/**
+ * Character Card API types
+ */
+export interface CharacterCardData {
+	name: string;
+	description: string;
+	first_mes: string;
+	personality?: string;
+	scenario?: string;
+	system_prompt?: string;
+	alternate_greetings?: string[];
+	nickname?: string;
+	tags?: string[];
+	creator?: string;
+	[key: string]: any;
+}
+
+export interface CharacterCardV3 {
+	spec: "chara_card_v3";
+	spec_version: "3.0";
+	data: CharacterCardData;
+}
+
+export interface CharacterCardListItem {
+	id: string;
+	name: string;
+	data: CharacterCardV3;
+	created_at: string;
+	modified_at: string;
+}
+
+/**
+ * List all character cards
+ */
+export async function listCharacterCards(
+	limit: number = 50
+): Promise<CharacterCardListItem[]> {
+	const response = await fetch(
+		`${API_BASE}/api/character-cards?limit=${limit}`,
+		{
+			method: "GET",
+		}
+	);
+
+	if (!response.ok) {
+		throw new Error(`API error: ${response.status} ${response.statusText}`);
+	}
+
+	const data = await response.json();
+	return data.character_cards || [];
+}
+
+/**
+ * Get a specific character card
+ */
+export async function getCharacterCard(
+	id: string
+): Promise<CharacterCardListItem> {
+	const response = await fetch(`${API_BASE}/api/character-cards/${id}`, {
+		method: "GET",
+	});
+
+	if (!response.ok) {
+		throw new Error(`API error: ${response.status} ${response.statusText}`);
+	}
+
+	return await response.json();
+}
+
+/**
+ * Create a new character card
+ */
+export async function createCharacterCard(
+	card: CharacterCardV3
+): Promise<CharacterCardListItem> {
+	const response = await fetch(`${API_BASE}/api/character-cards`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(card),
+	});
 
 	if (!response.ok) {
 		throw new Error(`API error: ${response.status} ${response.statusText}`);

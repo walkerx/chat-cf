@@ -238,7 +238,19 @@ wrangler d1 execute DB --local --command="INSERT INTO character_cards ..."
 
 ### Using Character Cards in Chat
 
-To use a character card in a chat conversation:
+#### Via Frontend UI
+
+The web interface provides a character card selector:
+
+1. Click the "+ Upload" button to upload a Character Card V3 JSON file
+2. Select a character from the dropdown menu
+3. View the character's greeting message before starting the conversation
+4. Start chatting - the character's personality and context will be applied automatically
+5. Click "+ New Conversation" to start fresh while keeping the same character
+
+#### Via API
+
+To use a character card programmatically:
 
 1. Create or upload a character card to the database
 2. Start a new conversation with the character card ID

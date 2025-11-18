@@ -8,15 +8,19 @@ import { useChat } from "./hooks/useChat.js";
 import { ChatDisplay } from "./components/ChatDisplay.js";
 import { ChatInputForm } from "./components/ChatInputForm.js";
 import { ErrorDisplay } from "./components/ErrorDisplay.js";
+import { CharacterCardSelector } from "./components/CharacterCardSelector.js";
 
 export function App() {
 	const {
 		messages,
 		isStreaming,
 		error,
+		characterCardId,
+		characterGreeting,
 		sendMessage,
 		abortStream,
 		clearError,
+		setCharacterCardId,
 		startNewConversation,
 	} = useChat();
 
@@ -34,6 +38,17 @@ export function App() {
 				</button>
 			</header>
 			<main className="app-main">
+				<CharacterCardSelector
+					selectedCardId={characterCardId}
+					onSelectCard={setCharacterCardId}
+					disabled={isStreaming}
+				/>
+				{characterGreeting && messages.length === 0 && (
+					<div className="character-greeting">
+						<div className="greeting-label">Character Greeting:</div>
+						<div className="greeting-content">{characterGreeting}</div>
+					</div>
+				)}
 				<ErrorDisplay error={error} onDismiss={clearError} />
 				<ChatDisplay messages={messages} />
 				<ChatInputForm
