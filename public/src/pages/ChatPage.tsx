@@ -1,0 +1,147 @@
+/**
+ * Chat Page Component
+ * Wrapper for existing chat interface with character-specific conversation loading
+ */
+
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useChatContext } from "../contexts/ChatContext.js";
+import { ChatDisplay } from "../components/ChatDisplay.js";
+import { ChatInputForm } from "../components/ChatInputForm.js";
+import { ErrorDisplay } from "../components/ErrorDisplay.js";
+import { ChatHeader } from "../components/ChatHeader.js";
+import {
+	getCharacterCard,
+} from "../services/api.js";
+
+export function ChatPage() {
+	const { characterId } = useParams<{ characterId: string }>();
+	const navigate = useNavigate();
+	const chat = useChatContext();
+	const [characterName, setCharacterName] = useState<string | null>(null);
+	const [loadingCharacter, setLoadingCharacter] = useState(true);
+	const [characterError, setCharacterError] = useState<string | null>(null);
+
+	// Load character data and conversation when page loads
+	useEffect(() => {
+		async function loadCharacterData() {
+			if (!characterId) {
+				setLoadingCharacter(false);
+				setCharacterName(null);
+				chat.setCharacterCardId(null);
+				return;
+			}
+
+			try {
+				setLoadingCharacter(true);
+				setCharacterError(null);
+
+				// Load character card from database
+				const card = await getCharacterCard(characterId);
+				setCharacterName(card.data.data.name);
+				
+				// Check if we're returning to the same character
+				// If so, preserve the existing state (messages, conversationId)
+				if (chat.characterCardId === characterId) {
+					// Same character - state is already preserved
+					setLoadingCharacter(false);
+					return;
+				}
+				
+				// Different character - set character and load conversation
+				chat.setCharacterCardId(characterId);
+				
+				// Load character-specific conversation
+				await chat.loadCharacterConversation(characterId);
+			} catch (err) {
+				console.error("Failed to load character:", err);
+				
+				// Handle specific error cases
+				if (err instanceof Error) {
+					const errorMessage = err.message.toLowerCase();
+					
+					// Character not found (404)
+					if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+						setCharacterError("Character not found. It may have been deleted.");
+					}
+					// Network errors
+					else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+						setCharacterError("Network error. Please check your connection and try again.");
+					}
+					// Failed to load conversations
+					else if (errorMessage.includes("conversation")) {
+						setCharacterError("Failed to load conversation history. You can still start a new chat.");
+					}
+					// Generic error
+					else {
+						setCharacterError(err.message || "Failed to load character");
+					}
+				} else {
+					setCharacterError("An unexpected error occurred");
+				}
+			} finally {
+				setLoadingCharacter(false);
+			}
+		}
+
+		loadCharacterData();
+	}, [characterId]);
+
+	const handleBack = () => {
+		navigate("/");
+	};
+
+	const handleNewConversation = () => {
+		chat.startNewConversation();
+	};
+
+	if (loadingCharacter) {
+		return (
+			<div className="chat-page" role="main">
+				<div className="chat-loading" role="status" aria-live="polite">
+					Loading character...
+				</div>
+			</div>
+		);
+	}
+
+	if (characterError) {
+		return (
+			<div className="chat-page" role="main">
+				<div className="chat-error" role="alert">
+					<p>Error: {characterError}</p>
+					<button onClick={handleBack} aria-label="Return to character gallery">
+						Back to Gallery
+					</button>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div className="chat-page" role="main">
+			<ChatHeader
+				characterName={characterName}
+				onBack={handleBack}
+				onNewConversation={handleNewConversation}
+				isStreaming={chat.isStreaming}
+			/>
+
+			<main className="chat-content" aria-label="Chat conversation">
+				{chat.characterGreeting && chat.messages.length === 0 && (
+					<div className="character-greeting" role="complementary" aria-label="Character greeting message">
+						<div className="greeting-label">Character Greeting:</div>
+						<div className="greeting-content">{chat.characterGreeting}</div>
+					</div>
+				)}
+				<ErrorDisplay error={chat.error} onDismiss={chat.clearError} />
+				<ChatDisplay messages={chat.messages} />
+				<ChatInputForm
+					onSubmit={chat.sendMessage}
+					onCancel={chat.abortStream}
+					isStreaming={chat.isStreaming}
+				/>
+			</main>
+		</div>
+	);
+}

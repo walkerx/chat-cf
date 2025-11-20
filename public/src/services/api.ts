@@ -230,3 +230,40 @@ export async function createCharacterCard(
 	return await response.json();
 }
 
+/**
+ * Get conversations for a specific character
+ * Filters all conversations by character_card_id
+ */
+export async function getCharacterConversations(
+	characterId: string,
+	sessionId?: string
+): Promise<Conversation[]> {
+	const allConversations = await listConversations(sessionId);
+	return allConversations.filter(c => c.character_card_id === characterId);
+}
+
+/**
+ * Get the most recent conversation for a character
+ * Returns null if no conversations exist for this character
+ */
+export async function getLatestCharacterConversation(
+	characterId: string,
+	sessionId?: string
+): Promise<Conversation | null> {
+	const conversations = await getCharacterConversations(characterId, sessionId);
+	return conversations.length > 0 ? conversations[0] : null;
+}
+
+/**
+ * Delete a character card
+ */
+export async function deleteCharacterCard(id: string): Promise<void> {
+	const response = await fetch(`${API_BASE}/api/character-cards/${id}`, {
+		method: "DELETE",
+	});
+
+	if (!response.ok) {
+		throw new Error(`API error: ${response.status} ${response.statusText}`);
+	}
+}
+

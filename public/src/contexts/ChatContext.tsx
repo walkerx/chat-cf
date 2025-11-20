@@ -1,11 +1,11 @@
 /**
- * React hooks for state management
- * Manage messages, streaming state, error state, conversation ID
+ * Chat Context Provider
+ * Provides shared chat state across the application to preserve state during navigation
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from "react";
 import type { Message } from "../../../src/models/message.js";
-import { streamChat, getConversation, listConversations, getCharacterCard, getLatestCharacterConversation } from "../services/api.js";
+import { streamChat, getConversation, getCharacterCard, getLatestCharacterConversation } from "../services/api.js";
 import { getOrCreateSessionId } from "../services/session.js";
 import { generateMessageId } from "../../../src/models/message.js";
 
@@ -19,27 +19,7 @@ export interface ChatState {
 	characterGreeting: string | null;
 }
 
-/**
- * Conversation cache entry
- */
-interface ConversationCacheEntry {
-	messages: Message[];
-	conversationId: string;
-	timestamp: number;
-}
-
-/**
- * In-memory cache for loaded conversations
- * Key: conversationId, Value: cached messages and metadata
- */
-const conversationCache = new Map<string, ConversationCacheEntry>();
-
-/**
- * Cache TTL in milliseconds (5 minutes)
- */
-const CACHE_TTL = 5 * 60 * 1000;
-
-export interface UseChatReturn {
+export interface ChatContextValue {
 	messages: Message[];
 	isStreaming: boolean;
 	error: string | null;
@@ -57,44 +37,64 @@ export interface UseChatReturn {
 	clearMessages: () => void;
 }
 
+const ChatContext = createContext<ChatContextValue | undefined>(undefined);
+
+const STORAGE_KEY = "chat_state";
+
+interface StoredChatState {
+	messages: Message[];
+	conversationId: string | null;
+	characterCardId: string | null;
+}
+
 /**
- * useChat hook
+ * Load chat state from session storage
  */
-export function useChat(): UseChatReturn {
-	const [messages, setMessages] = useState<Message[]>([]);
+function loadStateFromStorage(): Partial<StoredChatState> {
+	try {
+		const stored = sessionStorage.getItem(STORAGE_KEY);
+		if (stored) {
+			return JSON.parse(stored);
+		}
+	} catch (err) {
+		console.error("Failed to load chat state from storage:", err);
+	}
+	return {};
+}
+
+/**
+ * Save chat state to session storage
+ */
+function saveStateToStorage(state: StoredChatState): void {
+	try {
+		sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	} catch (err) {
+		console.error("Failed to save chat state to storage:", err);
+	}
+}
+
+export function ChatProvider({ children }: { children: ReactNode }) {
+	const [sessionId] = useState(() => getOrCreateSessionId());
+	
+	// Load initial state from storage
+	const storedState = loadStateFromStorage();
+	
+	const [messages, setMessages] = useState<Message[]>(storedState.messages || []);
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [conversationId, setConversationId] = useState<string | null>(null);
-	const [characterCardId, setCharacterCardId] = useState<string | null>(null);
+	const [conversationId, setConversationId] = useState<string | null>(storedState.conversationId || null);
+	const [characterCardId, setCharacterCardId] = useState<string | null>(storedState.characterCardId || null);
 	const [characterGreeting, setCharacterGreeting] = useState<string | null>(null);
-	const [sessionId] = useState(() => getOrCreateSessionId());
 	const abortRef = useRef<(() => void) | null>(null);
 
-	// Load conversation history on mount
+	// Save state to storage whenever it changes
 	useEffect(() => {
-		async function loadHistory() {
-			try {
-				// Get the most recent conversation for this session
-				const conversations = await listConversations(sessionId);
-				
-				if (conversations.length > 0) {
-					const mostRecent = conversations[0];
-					const { messages: historyMessages } = await getConversation(
-						mostRecent.id,
-						sessionId
-					);
-					
-					setConversationId(mostRecent.id);
-					setMessages(historyMessages);
-				}
-			} catch (err) {
-				console.error("Failed to load conversation history:", err);
-				// Don't show error to user, just start fresh
-			}
-		}
-
-		loadHistory();
-	}, [sessionId]);
+		saveStateToStorage({
+			messages,
+			conversationId,
+			characterCardId,
+		});
+	}, [messages, conversationId, characterCardId]);
 
 	// Load character greeting when character card is selected
 	useEffect(() => {
@@ -152,12 +152,9 @@ export function useChat(): UseChatReturn {
 				let assistantMessage: Message | null = null;
 				let fullContent = "";
 
-				let currentConversationId = conversationId;
-
 				for await (const chunk of chunks) {
 					// Extract conversationId from first chunk if present
-					if (chunk.conversationId && !currentConversationId) {
-						currentConversationId = chunk.conversationId;
+					if (chunk.conversationId && !conversationId) {
 						setConversationId(chunk.conversationId);
 					}
 
@@ -179,7 +176,7 @@ export function useChat(): UseChatReturn {
 						if (!assistantMessage) {
 							assistantMessage = {
 								id: generateMessageId(),
-								conversation_id: chunk.conversationId || currentConversationId || "",
+								conversation_id: chunk.conversationId || conversationId || "",
 								role: "assistant",
 								content: fullContent,
 								created_at: new Date().toISOString(),
@@ -197,21 +194,35 @@ export function useChat(): UseChatReturn {
 						}
 					}
 				}
-
-				// Update cache with new messages after streaming completes
-				if (currentConversationId && assistantMessage) {
-					setMessages((currentMessages) => {
-						conversationCache.set(currentConversationId!, {
-							messages: currentMessages,
-							conversationId: currentConversationId!,
-							timestamp: Date.now(),
-						});
-						return currentMessages;
-					});
-				}
 			} catch (err) {
-				const errorMessage =
-					err instanceof Error ? err.message : "Failed to send message";
+				// Handle specific error cases
+				let errorMessage = "Failed to send message";
+				
+				if (err instanceof Error) {
+					const errMsg = err.message.toLowerCase();
+					
+					// Network errors
+					if (errMsg.includes("network") || errMsg.includes("fetch") || errMsg.includes("failed to fetch")) {
+						errorMessage = "Network error. Please check your connection and try again.";
+					}
+					// Aborted requests
+					else if (errMsg.includes("abort")) {
+						errorMessage = "Message cancelled";
+					}
+					// Server errors
+					else if (errMsg.includes("500") || errMsg.includes("server error")) {
+						errorMessage = "Server error. Please try again later.";
+					}
+					// Rate limiting
+					else if (errMsg.includes("429") || errMsg.includes("rate limit")) {
+						errorMessage = "Too many requests. Please wait a moment and try again.";
+					}
+					// Use original error message for other cases
+					else {
+						errorMessage = err.message;
+					}
+				}
+				
 				setError(errorMessage);
 			} finally {
 				setIsStreaming(false);
@@ -245,7 +256,6 @@ export function useChat(): UseChatReturn {
 	 * Load the most recent conversation for a specific character
 	 * If no conversation exists, starts fresh with empty messages
 	 * Ensures conversation isolation between characters
-	 * Uses in-memory cache to avoid re-fetching on navigation
 	 */
 	const loadCharacterConversation = useCallback(async (characterId: string) => {
 		try {
@@ -255,31 +265,13 @@ export function useChat(): UseChatReturn {
 			const latestConversation = await getLatestCharacterConversation(characterId, sessionId);
 			
 			if (latestConversation) {
-				// Check cache first
-				const cached = conversationCache.get(latestConversation.id);
-				const now = Date.now();
-				
-				if (cached && (now - cached.timestamp) < CACHE_TTL) {
-					// Use cached data
-					setConversationId(cached.conversationId);
-					setMessages(cached.messages);
-				} else {
-					// Load from API and cache
-					const { messages: historyMessages } = await getConversation(
-						latestConversation.id,
-						sessionId
-					);
-					
-					// Update cache
-					conversationCache.set(latestConversation.id, {
-						messages: historyMessages,
-						conversationId: latestConversation.id,
-						timestamp: now,
-					});
-					
-					setConversationId(latestConversation.id);
-					setMessages(historyMessages);
-				}
+				// Load existing conversation history
+				const { messages: historyMessages } = await getConversation(
+					latestConversation.id,
+					sessionId
+				);
+				setConversationId(latestConversation.id);
+				setMessages(historyMessages);
 			} else {
 				// No conversation exists - start fresh
 				setConversationId(null);
@@ -287,7 +279,28 @@ export function useChat(): UseChatReturn {
 			}
 		} catch (err) {
 			console.error("Failed to load character conversation:", err);
-			setError("Failed to load conversation history");
+			
+			// Handle specific error cases
+			let errorMessage = "Failed to load conversation history";
+			
+			if (err instanceof Error) {
+				const errMsg = err.message.toLowerCase();
+				
+				// Network errors
+				if (errMsg.includes("network") || errMsg.includes("fetch") || errMsg.includes("failed to fetch")) {
+					errorMessage = "Network error. Unable to load conversation history.";
+				}
+				// Not found errors (conversation deleted)
+				else if (errMsg.includes("404") || errMsg.includes("not found")) {
+					errorMessage = "Conversation not found. Starting a new conversation.";
+				}
+				// Use original error message for other cases
+				else {
+					errorMessage = err.message;
+				}
+			}
+			
+			setError(errorMessage);
 			// Start fresh on error
 			setConversationId(null);
 			setMessages([]);
@@ -302,7 +315,7 @@ export function useChat(): UseChatReturn {
 		setMessages([]);
 	}, []);
 
-	return {
+	const value: ChatContextValue = {
 		messages,
 		isStreaming,
 		error,
@@ -319,5 +332,17 @@ export function useChat(): UseChatReturn {
 		loadCharacterConversation,
 		clearMessages,
 	};
+
+	return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
 
+/**
+ * Hook to access chat context
+ */
+export function useChatContext(): ChatContextValue {
+	const context = useContext(ChatContext);
+	if (!context) {
+		throw new Error("useChatContext must be used within a ChatProvider");
+	}
+	return context;
+}

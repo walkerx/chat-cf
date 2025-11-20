@@ -30,9 +30,13 @@ export function ErrorDisplay({
 	}
 
 	return (
-		<div className="error-display">
+		<div className="error-display" role="alert" aria-live="assertive">
 			<div className="error-message">{error}</div>
-			<button className="error-dismiss" onClick={onDismiss}>
+			<button
+				className="error-dismiss"
+				onClick={onDismiss}
+				aria-label="Dismiss error message"
+			>
 				×
 			</button>
 		</div>

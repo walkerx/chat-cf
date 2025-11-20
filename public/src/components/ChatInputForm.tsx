@@ -38,7 +38,7 @@ export function ChatInputForm({
 	};
 
 	return (
-		<form className="chat-input-form" onSubmit={handleSubmit}>
+		<form className="chat-input-form" onSubmit={handleSubmit} aria-label="Chat message form">
 			<input
 				type="text"
 				value={input}
@@ -46,12 +46,18 @@ export function ChatInputForm({
 				placeholder="Type your message..."
 				disabled={disabled || isStreaming}
 				className="chat-input"
+				aria-label="Message input"
+				aria-describedby="chat-input-hint"
 			/>
+			<span id="chat-input-hint" style={{ display: 'none' }}>
+				Type your message and press Enter or click Send
+			</span>
 			{isStreaming ? (
 				<button
 					type="button"
 					onClick={handleCancel}
 					className="chat-button chat-button-cancel"
+					aria-label="Cancel streaming message"
 				>
 					Cancel
 				</button>
@@ -60,6 +66,7 @@ export function ChatInputForm({
 					type="submit"
 					disabled={disabled || isStreaming || !input.trim()}
 					className="chat-button chat-button-submit"
+					aria-label="Send message"
 				>
 					Send
 				</button>

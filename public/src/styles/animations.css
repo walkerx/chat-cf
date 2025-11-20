@@ -1,0 +1,547 @@
+/**
+ * Animation and transition styles
+ * Smooth transitions between views, card hover animations, and modal effects
+ * Requirements: 8.2, 8.5
+ */
+
+/* Page Transition Animations */
+.page-enter {
+	opacity: 0;
+	transform: translateY(20px);
+}
+
+.page-enter-active {
+	opacity: 1;
+	transform: translateY(0);
+	transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.page-exit {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+.page-exit-active {
+	opacity: 0;
+	transform: translateY(-20px);
+	transition: opacity 0.3s ease-in, transform 0.3s ease-in;
+}
+
+/* Card Hover Animations */
+.character-card {
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.character-card:hover {
+	animation: cardFloat 0.3s ease-out forwards;
+}
+
+@keyframes cardFloat {
+	0% {
+		transform: translateY(0);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	}
+	100% {
+		transform: translateY(-8px);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+	}
+}
+
+/* Card Avatar Pulse on Hover */
+.character-card:hover .card-avatar {
+	animation: avatarPulse 0.6s ease-in-out;
+}
+
+@keyframes avatarPulse {
+	0%, 100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.1);
+	}
+}
+
+/* Card Content Fade In */
+.card-content {
+	animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* History Badge Slide In */
+.card-history-badge {
+	animation: slideInFromBottom 0.4s ease-out 0.1s backwards;
+}
+
+@keyframes slideInFromBottom {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Modal Fade In/Out */
+.modal-overlay {
+	animation: modalFadeIn 0.3s ease-out;
+}
+
+.modal-overlay.closing {
+	animation: modalFadeOut 0.2s ease-in forwards;
+}
+
+@keyframes modalFadeIn {
+	from {
+		opacity: 0;
+		backdrop-filter: blur(0);
+	}
+	to {
+		opacity: 1;
+		backdrop-filter: blur(4px);
+	}
+}
+
+@keyframes modalFadeOut {
+	from {
+		opacity: 1;
+		backdrop-filter: blur(4px);
+	}
+	to {
+		opacity: 0;
+		backdrop-filter: blur(0);
+	}
+}
+
+/* Modal Content Slide Up */
+.modal-content {
+	animation: modalSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.closing .modal-content {
+	animation: modalSlideDown 0.3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes modalSlideUp {
+	from {
+		opacity: 0;
+		transform: translateY(60px) scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes modalSlideDown {
+	from {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(40px) scale(0.95);
+	}
+}
+
+/* Button Hover Effects */
+.upload-button,
+.modal-button-primary,
+.chat-button-submit {
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.upload-button:hover:not(:disabled),
+.modal-button-primary:hover:not(:disabled),
+.chat-button-submit:hover:not(:disabled) {
+	animation: buttonLift 0.3s ease-out forwards;
+}
+
+@keyframes buttonLift {
+	0% {
+		transform: translateY(0);
+	}
+	100% {
+		transform: translateY(-3px);
+	}
+}
+
+/* Button Press Effect */
+.upload-button:active:not(:disabled),
+.modal-button:active:not(:disabled),
+.chat-button:active:not(:disabled) {
+	animation: buttonPress 0.1s ease-out;
+}
+
+@keyframes buttonPress {
+	0% {
+		transform: translateY(-3px);
+	}
+	100% {
+		transform: translateY(-1px);
+	}
+}
+
+/* Search Input Focus Animation */
+.gallery-search {
+	transition: all 0.3s ease;
+}
+
+.gallery-search:focus {
+	animation: inputFocusGlow 0.4s ease-out;
+}
+
+@keyframes inputFocusGlow {
+	0% {
+		box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+	}
+	50% {
+		box-shadow: 0 0 0 6px rgba(102, 126, 234, 0.1);
+	}
+	100% {
+		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+	}
+}
+
+/* Gallery Grid Stagger Animation */
+.gallery-grid .character-card {
+	animation: cardStaggerIn 0.5s ease-out backwards;
+}
+
+.gallery-grid .character-card:nth-child(1) { animation-delay: 0.05s; }
+.gallery-grid .character-card:nth-child(2) { animation-delay: 0.1s; }
+.gallery-grid .character-card:nth-child(3) { animation-delay: 0.15s; }
+.gallery-grid .character-card:nth-child(4) { animation-delay: 0.2s; }
+.gallery-grid .character-card:nth-child(5) { animation-delay: 0.25s; }
+.gallery-grid .character-card:nth-child(6) { animation-delay: 0.3s; }
+.gallery-grid .character-card:nth-child(7) { animation-delay: 0.35s; }
+.gallery-grid .character-card:nth-child(8) { animation-delay: 0.4s; }
+.gallery-grid .character-card:nth-child(9) { animation-delay: 0.45s; }
+.gallery-grid .character-card:nth-child(n+10) { animation-delay: 0.5s; }
+
+@keyframes cardStaggerIn {
+	from {
+		opacity: 0;
+		transform: translateY(30px) scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* Message Slide In Animation */
+.message {
+	animation: messageSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.message-user {
+	animation: messageSlideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.message-assistant {
+	animation: messageSlideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes messageSlideInRight {
+	from {
+		opacity: 0;
+		transform: translateX(30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes messageSlideInLeft {
+	from {
+		opacity: 0;
+		transform: translateX(-30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/* Character Greeting Animation */
+.character-greeting {
+	animation: greetingExpand 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes greetingExpand {
+	from {
+		opacity: 0;
+		transform: scaleY(0.8);
+		transform-origin: top;
+	}
+	to {
+		opacity: 1;
+		transform: scaleY(1);
+	}
+}
+
+/* Error Display Shake Animation */
+.error-display {
+	animation: errorShake 0.5s ease-out;
+}
+
+@keyframes errorShake {
+	0%, 100% {
+		transform: translateX(0);
+	}
+	10%, 30%, 50%, 70%, 90% {
+		transform: translateX(-5px);
+	}
+	20%, 40%, 60%, 80% {
+		transform: translateX(5px);
+	}
+}
+
+/* Loading Spinner Animation */
+.gallery-loading::after,
+.chat-loading::after {
+	content: "";
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	margin-left: 10px;
+	border: 3px solid rgba(102, 126, 234, 0.3);
+	border-top-color: #667eea;
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* Back Button Slide Animation */
+.back-button {
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.back-button:hover {
+	animation: backButtonSlide 0.3s ease-out forwards;
+}
+
+@keyframes backButtonSlide {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-6px);
+	}
+}
+
+/* Card Menu Dropdown Animation */
+.card-menu {
+	animation: menuDropdown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes menuDropdown {
+	from {
+		opacity: 0;
+		transform: translateY(-10px) scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* Search Highlight Pulse */
+.search-highlight {
+	animation: highlightPulse 1s ease-in-out;
+}
+
+@keyframes highlightPulse {
+	0%, 100% {
+		background-color: #fff3cd;
+	}
+	50% {
+		background-color: #ffe69c;
+	}
+}
+
+/* Upload Progress Animation */
+.upload-progress {
+	animation: progressPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes progressPulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.7;
+	}
+}
+
+/* Smooth Scroll Behavior */
+html {
+	scroll-behavior: smooth;
+}
+
+/* Reduce Motion for Accessibility */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+/* Focus Visible Styles for Keyboard Navigation */
+*:focus-visible {
+	outline: 3px solid #667eea;
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+
+/* Smooth Transitions for All Interactive Elements */
+button,
+input,
+select,
+textarea,
+a {
+	transition: all 0.2s ease;
+}
+
+/* Card Border Gradient Animation */
+.character-card::before {
+	transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.character-card:hover::before {
+	animation: borderGradientSlide 0.3s ease-out forwards;
+}
+
+@keyframes borderGradientSlide {
+	from {
+		transform: scaleX(0);
+		transform-origin: left;
+	}
+	to {
+		transform: scaleX(1);
+		transform-origin: left;
+	}
+}
+
+/* Gallery Header Fade In */
+.gallery-header {
+	animation: headerFadeIn 0.5s ease-out;
+}
+
+@keyframes headerFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Chat Header Slide In */
+.chat-header {
+	animation: chatHeaderSlideIn 0.4s ease-out;
+}
+
+@keyframes chatHeaderSlideIn {
+	from {
+		opacity: 0;
+		transform: translateY(-100%);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Empty State Fade In */
+.gallery-empty,
+.empty-state {
+	animation: emptyStateFadeIn 0.6s ease-out;
+}
+
+@keyframes emptyStateFadeIn {
+	from {
+		opacity: 0;
+		transform: scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* Confirm Dialog Bounce */
+.confirm-dialog .modal-content {
+	animation: confirmBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes confirmBounce {
+	0% {
+		opacity: 0;
+		transform: scale(0.8);
+	}
+	50% {
+		transform: scale(1.05);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* Typing Indicator Animation (for future use) */
+.typing-indicator {
+	display: inline-flex;
+	gap: 4px;
+}
+
+.typing-indicator span {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background-color: #667eea;
+	animation: typingDot 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+	animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+	animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+	0%, 60%, 100% {
+		transform: translateY(0);
+		opacity: 0.7;
+	}
+	30% {
+		transform: translateY(-10px);
+		opacity: 1;
+	}
+}
