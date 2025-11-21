@@ -4,7 +4,7 @@
  */
 
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import type { ClientSession } from "../models/client-session.js";
 import type { Conversation } from "../models/conversation.js";
 import type { Message } from "../models/message.js";
@@ -145,7 +145,7 @@ export class DatabaseClient {
 	): Promise<Conversation> {
 		try {
 			const now = new Date().toISOString();
-			
+
 			// Insert using Drizzle ORM
 			await this.orm
 				.insert(schema.conversations)
@@ -190,7 +190,7 @@ export class DatabaseClient {
 	): Promise<Message> {
 		try {
 			const now = new Date().toISOString();
-			
+
 			// Insert message using Drizzle ORM
 			await this.orm
 				.insert(schema.messages)
@@ -282,6 +282,36 @@ export class DatabaseClient {
 	}
 
 	/**
+	 * Get the most recent active conversation for a session and character
+	 */
+	async getActiveCharacterConversation(
+		sessionId: string,
+		characterCardId: string
+	): Promise<Conversation | null> {
+		try {
+			// Get the most recently updated conversation for this session and character
+			const result = await this.orm
+				.select()
+				.from(schema.conversations)
+				.where(and(
+					eq(schema.conversations.sessionId, sessionId),
+					eq(schema.conversations.characterCardId, characterCardId)
+				))
+				.orderBy(desc(schema.conversations.updatedAt))
+				.limit(1)
+				.get();
+
+			return result ? mapDbToConversation(result) : null;
+		} catch (error) {
+			throw new DatabaseError(
+				`Failed to get active character conversation: ${error instanceof Error ? error.message : String(error)}`,
+				"QUERY_ERROR",
+				error
+			);
+		}
+	}
+
+	/**
 	 * Create a new character card
 	 */
 	async createCharacterCard(
@@ -290,7 +320,7 @@ export class DatabaseClient {
 	): Promise<{ id: string; name: string; data: CharacterCardV3; created_at: string; modified_at: string }> {
 		try {
 			const now = new Date().toISOString();
-			
+
 			// Insert using Drizzle ORM
 			await this.orm
 				.insert(schema.characterCards)
@@ -356,7 +386,7 @@ export class DatabaseClient {
 	): Promise<{ id: string; name: string; data: CharacterCardV3; created_at: string; modified_at: string } | null> {
 		try {
 			const now = new Date().toISOString();
-			
+
 			// Check if card exists
 			const existing = await this.orm
 				.select()

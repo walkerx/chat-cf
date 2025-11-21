@@ -10,7 +10,7 @@ import { OpenRouterClient } from "../services/openrouter.js";
 import { getOrGenerateSessionId } from "../utils/session.js";
 import { prepareContextForOpenRouter } from "../utils/prompt.js";
 import { createStandardErrorResponse, formatErrorAsStreamChunk } from "../utils/errors.js";
-import { generateConversationId } from "../models/conversation.js";
+import { generateConversationId, type Conversation } from "../models/conversation.js";
 import { generateMessageId } from "../models/message.js";
 import { PromptBuilder, type CompiledContext } from "../services/prompt-builder.js";
 
@@ -43,7 +43,7 @@ export async function handleChatStream(
 
 	// Initialize services
 	const db = new DatabaseClient(c.env.DB);
-	
+
 	// Get API key from Cloudflare bindings (secrets or .dev.vars)
 	const apiKey = c.env.OPENROUTER_API_KEY;
 	if (!apiKey) {
@@ -52,10 +52,10 @@ export async function handleChatStream(
 			500
 		);
 	}
-	
+
 	// Get AI model from environment (defaults to deepseek)
 	const aiModel = c.env.AI_MODEL || "deepseek/deepseek-v3.2-exp";
-	
+
 	const openRouter = new OpenRouterClient({
 		apiKey,
 	});
@@ -86,7 +86,7 @@ export async function handleChatStream(
 		if (result.conversation.character_card_id) {
 			characterCardId = result.conversation.character_card_id;
 			useCharacterCardPrompt = true;
-			
+
 			// Load compiled context if available
 			if (result.conversation.compiled_context) {
 				try {
@@ -111,8 +111,15 @@ export async function handleChatStream(
 		}
 	} else {
 		// No conversation ID provided - reuse active conversation or create new one
-		const activeConversation = await db.getActiveConversation(sessionId);
-		
+		// No conversation ID provided - reuse active conversation or create new one
+		let activeConversation: Conversation | null = null;
+
+		if (characterCardId) {
+			activeConversation = await db.getActiveCharacterConversation(sessionId, characterCardId!);
+		} else {
+			activeConversation = await db.getActiveConversation(sessionId);
+		}
+
 		if (activeConversation) {
 			// Reuse existing active conversation
 			conversationId = activeConversation.id;
@@ -122,7 +129,7 @@ export async function handleChatStream(
 				if (result.conversation.character_card_id) {
 					characterCardId = result.conversation.character_card_id;
 					useCharacterCardPrompt = true;
-					
+
 					// Load compiled context if available
 					if (result.conversation.compiled_context) {
 						try {
@@ -152,12 +159,16 @@ export async function handleChatStream(
 			conversationId = generateConversationId();
 			await db.createConversation(conversationId, sessionId, undefined, characterCardId);
 			messageHistory = [{ role: "user", content: prompt }];
-			
+
 			// If character card provided, mark for use
 			if (characterCardId) {
 				useCharacterCardPrompt = true;
 			}
 		}
+	}
+
+	if (!conversationId) {
+		return c.json(createStandardErrorResponse("INTERNAL_ERROR"), 500);
 	}
 
 	// If using character card, compile static context if needed and build full prompt
@@ -176,7 +187,7 @@ export async function handleChatStream(
 				characterCardData.data,
 				"User" // Default user name, could be customized
 			);
-			
+
 			// Store compiled context in database for future use
 			await db.updateConversationCompiledContext(
 				conversationId,
