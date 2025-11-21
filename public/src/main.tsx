@@ -20,6 +20,8 @@ if (!rootElement) {
 	throw new Error("Root element not found");
 }
 
+console.log("[DEBUG] Initializing React app with React version:", React.version);
+
 const root = createRoot(rootElement);
 root.render(
 	<React.StrictMode>

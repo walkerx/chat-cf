@@ -74,10 +74,12 @@ function saveStateToStorage(state: StoredChatState): void {
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
+	console.log("[DEBUG] ChatProvider initializing");
 	const [sessionId] = useState(() => getOrCreateSessionId());
 	
 	// Load initial state from storage
 	const storedState = loadStateFromStorage();
+	console.log("[DEBUG] Loaded state from storage:", storedState);
 	
 	const [messages, setMessages] = useState<Message[]>(storedState.messages || []);
 	const [isStreaming, setIsStreaming] = useState(false);

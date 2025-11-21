@@ -3,7 +3,7 @@
  * Main gallery page that displays character cards with conversation history
  */
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CharacterCardListItem } from "../services/api.js";
 import { listCharacterCards, listConversations, deleteCharacterCard } from "../services/api.js";
@@ -124,29 +124,6 @@ export function GalleryPage() {
 		navigate(`/chat/${characterId}`);
 	}, [navigate]);
 
-	if (loading) {
-		return (
-			<div className="gallery-page">
-				<div className="gallery-loading" role="status" aria-live="polite">
-					Loading characters...
-				</div>
-			</div>
-		);
-	}
-
-	if (error) {
-		return (
-			<div className="gallery-page">
-				<div className="gallery-error" role="alert">
-					<p>Error: {error}</p>
-					<button onClick={() => window.location.reload()} aria-label="Retry loading characters">
-						Retry
-					</button>
-				</div>
-			</div>
-		);
-	}
-
 	const handleUpload = useCallback(() => {
 		setShowUploadModal(true);
 	}, []);
@@ -238,6 +215,29 @@ export function GalleryPage() {
 		// Edit functionality - placeholder for future implementation
 		console.log("Edit character:", characterId);
 	}, []);
+
+	if (loading) {
+		return (
+			<div className="gallery-page">
+				<div className="gallery-loading" role="status" aria-live="polite">
+					Loading characters...
+				</div>
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div className="gallery-page">
+				<div className="gallery-error" role="alert">
+					<p>Error: {error}</p>
+					<button onClick={() => window.location.reload()} aria-label="Retry loading characters">
+						Retry
+					</button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="gallery-page" role="main">
