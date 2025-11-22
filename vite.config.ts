@@ -30,8 +30,16 @@ export default defineConfig({
 	build: {
 		outDir: resolve(process.cwd(), "dist"),
 		emptyOutDir: true,
+		chunkSizeWarningLimit: 1000,
 		rollupOptions: {
 			input: resolve(process.cwd(), "public/index.html"),
+			output: {
+				manualChunks: {
+					'vendor-react': ['react', 'react-dom', 'react-router-dom', 'react-helmet-async'],
+					'vendor-i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+					'vendor-supabase': ['@supabase/supabase-js'],
+				},
+			},
 		},
 	},
 	root: "./public",

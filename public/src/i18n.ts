@@ -3,22 +3,10 @@ import { initReactI18next } from 'react-i18next';
 import enTranslation from './locales/en.json';
 import zhCNTranslation from './locales/zh-CN.json';
 
-// Get language from localStorage or browser
-const getDefaultLanguage = () => {
-  const savedLanguage = localStorage.getItem('language');
-  if (savedLanguage && ['en', 'zh-CN'].includes(savedLanguage)) {
-    return savedLanguage;
-  }
-
-  // Detect browser language
-  const browserLang = navigator.language;
-  if (browserLang.startsWith('zh')) {
-    return 'zh-CN';
-  }
-  return 'en';
-};
+import LanguageDetector from 'i18next-browser-languagedetector';
 
 i18n
+  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
@@ -29,10 +17,13 @@ i18n
         translation: zhCNTranslation,
       },
     },
-    lng: getDefaultLanguage(),
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
+    },
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage'],
     },
   });
 

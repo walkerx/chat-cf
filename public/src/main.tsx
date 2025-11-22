@@ -5,6 +5,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { ChatProvider } from "./contexts/ChatContext.js";
 import { AuthProvider } from "./contexts/AuthContext.js";
 import { AppRoot } from "./AppRoot.js";
@@ -22,16 +23,20 @@ if (!rootElement) {
 
 console.log("[DEBUG] Initializing React app with React version:", React.version);
 
+
+
 const root = createRoot(rootElement);
 root.render(
 	<React.StrictMode>
-		<BrowserRouter>
-			<AuthProvider>
-				<ChatProvider>
-					<AppRoot />
-				</ChatProvider>
-			</AuthProvider>
-		</BrowserRouter>
+		<HelmetProvider>
+			<BrowserRouter>
+				<AuthProvider>
+					<ChatProvider>
+						<AppRoot />
+					</ChatProvider>
+				</AuthProvider>
+			</BrowserRouter>
+		</HelmetProvider>
 	</React.StrictMode>
 );
 

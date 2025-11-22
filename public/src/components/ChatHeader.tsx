@@ -6,6 +6,7 @@
 
 import type { User } from "@supabase/supabase-js";
 import { UserMenu } from "./UserMenu.js";
+import { LanguageSwitcher } from "./LanguageSwitcher.js";
 
 export interface ChatHeaderProps {
 	characterName: string | null;
@@ -43,6 +44,7 @@ export function ChatHeader({
 			>
 				+ New Chat
 			</button>
+			<LanguageSwitcher />
 			{user ? (
 				<UserMenu />
 			) : (

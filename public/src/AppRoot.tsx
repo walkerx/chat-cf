@@ -12,6 +12,7 @@ import AuthPage from './components/AuthPage.js';
 import { UsernameSetup } from './components/UsernameSetup.js';
 import { GalleryErrorBoundary } from './components/GalleryErrorBoundary.js';
 import { ChatErrorBoundary } from './components/ChatErrorBoundary.js';
+import { SEOHead } from './components/SEOHead.js';
 
 export function AppRoot() {
     const { user, username, updateUsername, loading } = useAuth();
@@ -37,6 +38,7 @@ export function AppRoot() {
 
     return (
         <>
+            <SEOHead />
             <Routes>
                 <Route
                     path="/"
