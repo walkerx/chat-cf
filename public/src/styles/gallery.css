@@ -108,6 +108,28 @@
 	background: transparent;
 }
 
+/* Auth Button */
+.auth-button {
+	padding: 0.6rem 1.25rem;
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-sm);
+	background: rgba(0, 0, 0, 0.3);
+	color: var(--text-secondary);
+	font-size: 0.9rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.auth-button:hover {
+	background: var(--surface-hover);
+	color: var(--text-primary);
+	border-color: var(--text-primary);
+	box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
 /* Gallery States */
 .gallery-loading,
 .gallery-error {

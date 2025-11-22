@@ -3,12 +3,11 @@
  * Error boundary specifically for the gallery page
  */
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import { type ReactNode, type ErrorInfo } from "react";
 import { ErrorBoundary } from "./ErrorBoundary.js";
 
 export interface GalleryErrorBoundaryProps {
-	children: React.ReactNode;
+	children: ReactNode;
 }
 
 function GalleryErrorFallback({ error, reset }: { error: Error; reset: () => void }) {
@@ -41,7 +40,7 @@ function GalleryErrorFallback({ error, reset }: { error: Error; reset: () => voi
 }
 
 export function GalleryErrorBoundary({ children }: GalleryErrorBoundaryProps) {
-	const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
+	const handleError = (error: Error, errorInfo: ErrorInfo) => {
 		console.error("Gallery error:", error, errorInfo);
 	};
 

@@ -3,7 +3,7 @@
  * Display error chunks from API (fail-fast error propagation), show error code + message, auto-dismiss after 5s
  */
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 export interface ErrorDisplayProps {
 	error: string | null;

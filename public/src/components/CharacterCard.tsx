@@ -3,7 +3,7 @@
  * Individual character card with hover effects and history indicators
  */
 
-import React, { useState, memo } from "react";
+import { useState, memo, type KeyboardEvent, type ReactNode } from "react";
 import type { CharacterWithHistory } from "../pages/GalleryPage.js";
 
 export interface CharacterCardProps {
@@ -22,10 +22,10 @@ export const CharacterCard = memo(function CharacterCard({
 	searchQuery = "",
 }: CharacterCardProps) {
 	const [showMenu, setShowMenu] = useState(false);
-	const { card, conversationCount, lastMessageAt, lastMessagePreview } =
+	const { card, conversationCount, lastMessageAt } =
 		character;
 
-	const handleKeyDown = (e: React.KeyboardEvent) => {
+	const handleKeyDown = (e: KeyboardEvent) => {
 		if (e.key === "Enter" || e.key === " ") {
 			e.preventDefault();
 			onClick();
@@ -141,7 +141,7 @@ function formatRelativeTime(timestamp: string): string {
  * Highlight matching text in a string
  * Returns JSX with highlighted spans for matching text
  */
-function highlightText(text: string, query: string): React.ReactNode {
+function highlightText(text: string, query: string): ReactNode {
 	if (!query.trim()) {
 		return text;
 	}

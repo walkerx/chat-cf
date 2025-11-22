@@ -3,9 +3,10 @@
  * Wrapper for existing chat interface with character-specific conversation loading
  */
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useChatContext } from "../contexts/ChatContext.js";
+import { useAuth } from "../contexts/AuthContext.js";
 import { ChatDisplay } from "../components/ChatDisplay.js";
 import { ChatInputForm } from "../components/ChatInputForm.js";
 import { ErrorDisplay } from "../components/ErrorDisplay.js";
@@ -21,6 +22,7 @@ export function ChatPage() {
 	const [characterName, setCharacterName] = useState<string | null>(null);
 	const [loadingCharacter, setLoadingCharacter] = useState(true);
 	const [characterError, setCharacterError] = useState<string | null>(null);
+	const { user, signOut } = useAuth();
 
 	// Load character data and conversation when page loads
 	useEffect(() => {
@@ -39,7 +41,7 @@ export function ChatPage() {
 				// Load character card from database
 				const card = await getCharacterCard(characterId);
 				setCharacterName(card.data.data.name);
-				
+
 				// Check if we're returning to the same character
 				// If so, preserve the existing state (messages, conversationId)
 				if (chat.characterCardId === characterId) {
@@ -47,19 +49,19 @@ export function ChatPage() {
 					setLoadingCharacter(false);
 					return;
 				}
-				
+
 				// Different character - set character and load conversation
 				chat.setCharacterCardId(characterId);
-				
+
 				// Load character-specific conversation
 				await chat.loadCharacterConversation(characterId);
 			} catch (err) {
 				console.error("Failed to load character:", err);
-				
+
 				// Handle specific error cases
 				if (err instanceof Error) {
 					const errorMessage = err.message.toLowerCase();
-					
+
 					// Character not found (404)
 					if (errorMessage.includes("404") || errorMessage.includes("not found")) {
 						setCharacterError("Character not found. It may have been deleted.");
@@ -95,6 +97,14 @@ export function ChatPage() {
 		chat.startNewConversation();
 	};
 
+	const handleAuthAction = async () => {
+		if (user) {
+			await signOut();
+		} else {
+			navigate("/auth");
+		}
+	};
+
 	if (loadingCharacter) {
 		return (
 			<div className="chat-page" role="main">
@@ -125,6 +135,8 @@ export function ChatPage() {
 				onBack={handleBack}
 				onNewConversation={handleNewConversation}
 				isStreaming={chat.isStreaming}
+				user={user}
+				onAuthAction={handleAuthAction}
 			/>
 
 			<main className="chat-content" aria-label="Chat conversation">

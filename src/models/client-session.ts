@@ -5,6 +5,7 @@
 
 export interface ClientSession {
 	id: string; // UUID
+	user_id?: string; // Optional Supabase User ID
 	created_at: string; // ISO 8601 timestamp
 	last_activity: string; // ISO 8601 timestamp
 	metadata?: Record<string, unknown>; // Optional JSON metadata
@@ -31,11 +32,13 @@ export function isValidSessionId(id: string): boolean {
  */
 export function createClientSession(
 	id: string,
-	metadata?: Record<string, unknown>
+	metadata?: Record<string, unknown>,
+	user_id?: string
 ): ClientSession {
 	const now = new Date().toISOString();
 	return {
 		id,
+		user_id,
 		created_at: now,
 		last_activity: now,
 		metadata,

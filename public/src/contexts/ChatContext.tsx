@@ -3,7 +3,7 @@
  * Provides shared chat state across the application to preserve state during navigation
  */
 
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from "react";
 import type { Message } from "../../../src/models/message.js";
 import { streamChat, getConversation, getCharacterCard, getLatestCharacterConversation } from "../services/api.js";
 import { getOrCreateSessionId } from "../services/session.js";
@@ -76,11 +76,11 @@ function saveStateToStorage(state: StoredChatState): void {
 export function ChatProvider({ children }: { children: ReactNode }) {
 	console.log("[DEBUG] ChatProvider initializing");
 	const [sessionId] = useState(() => getOrCreateSessionId());
-	
+
 	// Load initial state from storage
 	const storedState = loadStateFromStorage();
 	console.log("[DEBUG] Loaded state from storage:", storedState);
-	
+
 	const [messages, setMessages] = useState<Message[]>(storedState.messages || []);
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -199,10 +199,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 			} catch (err) {
 				// Handle specific error cases
 				let errorMessage = "Failed to send message";
-				
+
 				if (err instanceof Error) {
 					const errMsg = err.message.toLowerCase();
-					
+
 					// Network errors
 					if (errMsg.includes("network") || errMsg.includes("fetch") || errMsg.includes("failed to fetch")) {
 						errorMessage = "Network error. Please check your connection and try again.";
@@ -224,7 +224,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 						errorMessage = err.message;
 					}
 				}
-				
+
 				setError(errorMessage);
 			} finally {
 				setIsStreaming(false);
@@ -262,10 +262,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 	const loadCharacterConversation = useCallback(async (characterId: string) => {
 		try {
 			setError(null);
-			
+
 			// Get the latest conversation for this character
 			const latestConversation = await getLatestCharacterConversation(characterId, sessionId);
-			
+
 			if (latestConversation) {
 				// Load existing conversation history
 				const { messages: historyMessages } = await getConversation(
@@ -281,13 +281,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 			}
 		} catch (err) {
 			console.error("Failed to load character conversation:", err);
-			
+
 			// Handle specific error cases
 			let errorMessage = "Failed to load conversation history";
-			
+
 			if (err instanceof Error) {
 				const errMsg = err.message.toLowerCase();
-				
+
 				// Network errors
 				if (errMsg.includes("network") || errMsg.includes("fetch") || errMsg.includes("failed to fetch")) {
 					errorMessage = "Network error. Unable to load conversation history.";
@@ -301,7 +301,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 					errorMessage = err.message;
 				}
 			}
-			
+
 			setError(errorMessage);
 			// Start fresh on error
 			setConversationId(null);

@@ -3,7 +3,7 @@
  * Responsive grid layout for displaying character cards
  */
 
-import React, { memo } from "react";
+import { memo } from "react";
 import type { CharacterWithHistory } from "../pages/GalleryPage.js";
 import { CharacterCard } from "./CharacterCard.js";
 

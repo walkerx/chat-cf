@@ -3,13 +3,16 @@
  * Header with search input and upload button for the character gallery
  */
 
-import React, { memo } from "react";
+import { memo } from "react";
+import type { User } from "@supabase/supabase-js";
 
 export interface GalleryHeaderProps {
 	searchQuery: string;
 	onSearchChange: (query: string) => void;
 	onUpload: () => void;
 	showSearch: boolean;
+	user: User | null;
+	onAuthAction: () => void;
 }
 
 export const GalleryHeader = memo(function GalleryHeader({
@@ -17,6 +20,8 @@ export const GalleryHeader = memo(function GalleryHeader({
 	onSearchChange,
 	onUpload,
 	showSearch,
+	user,
+	onAuthAction,
 }: GalleryHeaderProps) {
 	return (
 		<header className="gallery-header">
@@ -38,6 +43,13 @@ export const GalleryHeader = memo(function GalleryHeader({
 					aria-label="Upload a new character card"
 				>
 					+ Upload Character
+				</button>
+				<button
+					className="auth-button"
+					onClick={onAuthAction}
+					aria-label={user ? "Sign out" : "Sign in"}
+				>
+					{user ? "Sign Out" : "Sign In"}
 				</button>
 			</div>
 		</header>

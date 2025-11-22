@@ -3,7 +3,7 @@
  * Text input field (text-only validation per spec.md), submit button, disable during streaming, clear input after submit
  */
 
-import React, { useState, FormEvent } from "react";
+import { useState, FormEvent } from "react";
 
 export interface ChatInputFormProps {
 	onSubmit: (prompt: string) => void;

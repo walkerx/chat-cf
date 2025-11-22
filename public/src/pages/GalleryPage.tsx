@@ -3,11 +3,12 @@
  * Main gallery page that displays character cards with conversation history
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CharacterCardListItem } from "../services/api.js";
 import { listCharacterCards, listConversations, deleteCharacterCard } from "../services/api.js";
 import { getOrCreateSessionId } from "../services/session.js";
+import { useAuth } from "../contexts/AuthContext.js";
 import { GalleryGrid } from "../components/GalleryGrid.js";
 import { GalleryHeader } from "../components/GalleryHeader.js";
 import { UploadModal } from "../components/UploadModal.js";
@@ -36,6 +37,7 @@ export function GalleryPage() {
 	} | null>(null);
 	const sessionId = getOrCreateSessionId();
 	const navigate = useNavigate();
+	const { user, signOut } = useAuth();
 
 	// Load characters and their conversation history
 	useEffect(() => {
@@ -56,10 +58,10 @@ export function GalleryPage() {
 					// Find most recent conversation
 					const mostRecent = characterConversations.length > 0
 						? characterConversations.reduce((latest, current) =>
-								new Date(current.updated_at) > new Date(latest.updated_at)
-									? current
-									: latest
-						  )
+							new Date(current.updated_at) > new Date(latest.updated_at)
+								? current
+								: latest
+						)
 						: null;
 
 					return {
@@ -73,11 +75,11 @@ export function GalleryPage() {
 				setCharacters(charactersWithHistory);
 			} catch (err) {
 				console.error("Failed to load characters:", err);
-				
+
 				// Handle specific error cases
 				if (err instanceof Error) {
 					const errorMessage = err.message.toLowerCase();
-					
+
 					// Network errors
 					if (errorMessage.includes("network") || errorMessage.includes("fetch") || errorMessage.includes("failed to fetch")) {
 						setError("Network error. Please check your connection and try again.");
@@ -157,7 +159,7 @@ export function GalleryPage() {
 				hasConversations: character.conversationCount > 0,
 				conversationCount: character.conversationCount,
 			});
-			
+
 			return currentCharacters;
 		});
 	}, []);
@@ -178,11 +180,11 @@ export function GalleryPage() {
 			setDeleteConfirm(null);
 		} catch (err) {
 			console.error("Failed to delete character:", err);
-			
+
 			// Handle specific error cases
 			if (err instanceof Error) {
 				const errorMessage = err.message.toLowerCase();
-				
+
 				// Character not found (already deleted)
 				if (errorMessage.includes("404") || errorMessage.includes("not found")) {
 					setError("Character not found. It may have already been deleted.");
@@ -202,7 +204,7 @@ export function GalleryPage() {
 			} else {
 				setError("An unexpected error occurred while deleting the character");
 			}
-			
+
 			setDeleteConfirm(null);
 		}
 	}, [deleteConfirm]);
@@ -214,7 +216,16 @@ export function GalleryPage() {
 	const handleEditCharacter = useCallback((characterId: string) => {
 		// Edit functionality - placeholder for future implementation
 		console.log("Edit character:", characterId);
+		console.log("Edit character:", characterId);
 	}, []);
+
+	const handleAuthAction = useCallback(async () => {
+		if (user) {
+			await signOut();
+		} else {
+			navigate("/auth");
+		}
+	}, [user, signOut, navigate]);
 
 	if (loading) {
 		return (
@@ -246,6 +257,8 @@ export function GalleryPage() {
 				onSearchChange={setSearchQuery}
 				onUpload={handleUpload}
 				showSearch={characters.length > 5}
+				user={user}
+				onAuthAction={handleAuthAction}
 			/>
 
 			{filteredCharacters.length === 0 && debouncedSearchQuery && (

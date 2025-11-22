@@ -3,7 +3,7 @@
  * Display streaming chunks in real-time, show partial text as it arrives, clear after stream completes
  */
 
-import React from "react";
+
 import type { Message } from "../../../src/models/message.js";
 
 export interface ChatDisplayProps {

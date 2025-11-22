@@ -3,13 +3,16 @@
  * Header with back button, character name, and new conversation button
  */
 
-import React from "react";
+
+import type { User } from "@supabase/supabase-js";
 
 export interface ChatHeaderProps {
 	characterName: string | null;
 	onBack: () => void;
 	onNewConversation: () => void;
 	isStreaming?: boolean;
+	user: User | null;
+	onAuthAction: () => void;
 }
 
 export function ChatHeader({
@@ -17,6 +20,8 @@ export function ChatHeader({
 	onBack,
 	onNewConversation,
 	isStreaming = false,
+	user,
+	onAuthAction,
 }: ChatHeaderProps) {
 	return (
 		<header className="chat-header">
@@ -36,6 +41,13 @@ export function ChatHeader({
 				aria-label="Start new conversation"
 			>
 				+ New Chat
+			</button>
+			<button
+				className="auth-button"
+				onClick={onAuthAction}
+				aria-label={user ? "Sign out" : "Sign in"}
+			>
+				{user ? "Sign Out" : "Sign In"}
 			</button>
 		</header>
 	);

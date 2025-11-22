@@ -9,7 +9,7 @@
 		"build": "pnpm run build:frontend && wrangler deploy --dry-run && echo '✓ Build successful'",
 		"deploy": "pnpm run build:frontend && wrangler deploy --minify",
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
-		"type-check": "tsc --noEmit",
+		"type-check": "tsc --noEmit && tsc -p public/tsconfig.json --noEmit",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"pre-commit": "pnpm run cf-typegen && pnpm run type-check",
@@ -21,6 +21,7 @@
 	},
 	"dependencies": {
 		"@huggingface/jinja": "^0.5.1",
+		"@supabase/supabase-js": "^2.84.0",
 		"@types/react": "^19.2.5",
 		"@types/react-dom": "^19.2.3",
 		"drizzle-orm": "^0.44.7",

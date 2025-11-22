@@ -3,7 +3,7 @@
  * Integrate ChatDisplay + ChatInputForm + ErrorDisplay, wire hooks (useChat), manage streaming state, pass callbacks
  */
 
-import React from "react";
+
 import { useChat } from "./hooks/useChat.js";
 import { ChatDisplay } from "./components/ChatDisplay.js";
 import { ChatInputForm } from "./components/ChatInputForm.js";
