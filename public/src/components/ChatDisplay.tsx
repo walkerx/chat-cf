@@ -88,6 +88,11 @@ export function ChatDisplay({
 		return sanitizeHTML(content, allowedTags);
 	};
 
+	const lastMessage = messages[messages.length - 1];
+	// Only show typing indicator if the last message is from the user and we are streaming
+	// Once the assistant starts responding (and adds a message), we hide the indicator
+	const showTypingIndicator = isStreaming && lastMessage?.role === 'user';
+
 	return (
 		<div className="chat-display" role="log" aria-live="polite" aria-label={t('chat.messagesLabel')}>
 			{messages.length === 0 ? (
@@ -121,7 +126,7 @@ export function ChatDisplay({
 								</div>
 							</div>
 						))}
-						{isStreaming && (
+						{showTypingIndicator && (
 							<div className="message message-assistant typing-indicator" role="status" aria-label={t('chat.aiTyping')}>
 								<div className="message-role">{characterName || t('chat.assistant')}</div>
 								<div className="typing-dots">
