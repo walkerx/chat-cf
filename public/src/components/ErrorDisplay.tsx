@@ -4,6 +4,7 @@
  */
 
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface ErrorDisplayProps {
 	error: string | null;
@@ -16,6 +17,8 @@ export function ErrorDisplay({
 	onDismiss,
 	autoDismissMs = 5000,
 }: ErrorDisplayProps) {
+	const { t } = useTranslation();
+
 	useEffect(() => {
 		if (error && autoDismissMs > 0) {
 			const timer = setTimeout(() => {
@@ -35,7 +38,7 @@ export function ErrorDisplay({
 			<button
 				className="error-dismiss"
 				onClick={onDismiss}
-				aria-label="Dismiss error message"
+				aria-label={t('error.dismiss')}
 			>
 				×
 			</button>

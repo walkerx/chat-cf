@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { CharacterCardV3, CharacterCardListItem } from "../services/api.js";
 import { createCharacterCard } from "../services/api.js";
 
@@ -13,6 +14,7 @@ export interface UploadModalProps {
 }
 
 export function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
+	const { t } = useTranslation();
 	const [error, setError] = useState<string | null>(null);
 	const [uploading, setUploading] = useState(false);
 
@@ -32,46 +34,38 @@ export function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
 			try {
 				card = JSON.parse(text);
 			} catch (parseError) {
-				throw new Error("Invalid JSON format. Please upload a valid JSON file.");
+				throw new Error(t('upload.invalidJSON'));
 			}
 
 			// Validate character card structure
 			if (!card || typeof card !== "object") {
-				throw new Error("Invalid character card format.");
+				throw new Error(t('upload.invalidFormat'));
 			}
 
 			if (card.spec !== "chara_card_v3") {
-				throw new Error(
-					"Invalid character card spec. Expected 'chara_card_v3'."
-				);
+				throw new Error(t('upload.invalidSpec'));
 			}
 
 			if (card.spec_version !== "3.0") {
-				throw new Error(
-					"Invalid character card version. Expected '3.0'."
-				);
+				throw new Error(t('upload.invalidVersion'));
 			}
 
 			const data = card.data;
 			if (!data || typeof data !== "object") {
-				throw new Error("Character card missing 'data' field.");
+				throw new Error(t('upload.missingData'));
 			}
 
 			// Validate required fields
 			if (typeof data.name !== "string" || data.name.length === 0) {
-				throw new Error("Character card must have a non-empty 'name' field.");
+				throw new Error(t('upload.missingName'));
 			}
 
 			if (typeof data.description !== "string" || data.description.length === 0) {
-				throw new Error(
-					"Character card must have a non-empty 'description' field."
-				);
+				throw new Error(t('upload.missingDescription'));
 			}
 
 			if (typeof data.first_mes !== "string" || data.first_mes.length === 0) {
-				throw new Error(
-					"Character card must have a non-empty 'first_mes' field."
-				);
+				throw new Error(t('upload.missingFirstMessage'));
 			}
 
 			// Upload to server
@@ -81,21 +75,21 @@ export function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
 			// Handle specific error cases
 			if (err instanceof Error) {
 				const errorMessage = err.message.toLowerCase();
-				
+
 				// Network errors
 				if (errorMessage.includes("network") || errorMessage.includes("fetch") || errorMessage.includes("failed to fetch")) {
-					setError("Network error. Please check your connection and try again.");
+					setError(t('error.network'));
 				}
 				// Server errors
 				else if (errorMessage.includes("500") || errorMessage.includes("server error")) {
-					setError("Server error. Please try again later.");
+					setError(t('error.serverError'));
 				}
 				// Use the original error message for validation errors
 				else {
 					setError(err.message);
 				}
 			} else {
-				setError("Upload failed. Please try again.");
+				setError(t('upload.error'));
 			}
 		} finally {
 			setUploading(false);
@@ -119,11 +113,11 @@ export function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
 		>
 			<div className="modal-content" onClick={(e) => e.stopPropagation()}>
 				<div className="modal-header">
-					<h2 id="upload-modal-title">Upload Character Card</h2>
+					<h2 id="upload-modal-title">{t('upload.title')}</h2>
 					<button
 						className="modal-close"
 						onClick={onClose}
-						aria-label="Close upload modal"
+						aria-label={t('upload.closeModal')}
 					>
 						×
 					</button>
@@ -137,10 +131,9 @@ export function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
 					)}
 
 					<div className="upload-instructions">
-						<p>Select a Character Card V3 JSON file to upload.</p>
+						<p>{t('upload.selectFile')}</p>
 						<p className="upload-hint">
-							The file must contain valid CCv3 format with name, description,
-							and first_mes fields.
+							{t('upload.fileRequirements')}
 						</p>
 					</div>
 
@@ -150,12 +143,12 @@ export function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
 						onChange={handleFileUpload}
 						disabled={uploading}
 						className="file-input"
-						aria-label="Select character card JSON file"
+						aria-label={t('upload.selectFileLabel')}
 					/>
 
 					{uploading && (
 						<div className="upload-progress" role="status" aria-live="polite">
-							Uploading character...
+							{t('upload.uploading')}
 						</div>
 					)}
 				</div>
@@ -165,9 +158,9 @@ export function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
 						className="modal-button modal-button-secondary"
 						onClick={onClose}
 						disabled={uploading}
-						aria-label="Cancel upload"
+						aria-label={t('upload.cancelUpload')}
 					>
-						Cancel
+						{t('common.cancel')}
 					</button>
 				</div>
 			</div>

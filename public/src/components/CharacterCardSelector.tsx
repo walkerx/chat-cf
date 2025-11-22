@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { CharacterCardListItem } from "../services/api.js";
 import { listCharacterCards, createCharacterCard, type CharacterCardV3 } from "../services/api.js";
 
@@ -18,6 +19,7 @@ export function CharacterCardSelector({
 	onSelectCard,
 	disabled = false,
 }: CharacterCardSelectorProps) {
+	const { t } = useTranslation();
 	const [cards, setCards] = useState<CharacterCardListItem[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function CharacterCardSelector({
 				const loadedCards = await listCharacterCards();
 				setCards(loadedCards);
 			} catch (err) {
-				setError(err instanceof Error ? err.message : "Failed to load character cards");
+				setError(err instanceof Error ? err.message : t('character.loadError'));
 			} finally {
 				setLoading(false);
 			}
@@ -51,7 +53,7 @@ export function CharacterCardSelector({
 
 			// Validate basic structure
 			if (card.spec !== "chara_card_v3" || !card.data?.name) {
-				throw new Error("Invalid character card format");
+				throw new Error(t('upload.invalidFormat'));
 			}
 
 			// Upload to server
@@ -60,7 +62,7 @@ export function CharacterCardSelector({
 			onSelectCard(created.id);
 			setShowUpload(false);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to upload character card");
+			setError(err instanceof Error ? err.message : t('upload.error'));
 		}
 
 		// Reset file input
@@ -70,21 +72,21 @@ export function CharacterCardSelector({
 	const selectedCard = cards.find((c) => c.id === selectedCardId);
 
 	if (loading) {
-		return <div className="character-card-selector loading">Loading character cards...</div>;
+		return <div className="character-card-selector loading">{t('character.loading')}</div>;
 	}
 
 	return (
 		<div className="character-card-selector">
 			<div className="selector-header">
-				<label htmlFor="character-select">Character:</label>
+				<label htmlFor="character-select">{t('character.selectCharacter')}:</label>
 				<button
 					type="button"
 					onClick={() => setShowUpload(!showUpload)}
 					disabled={disabled}
 					className="upload-button"
-					title="Upload character card"
+					title={t('character.uploadCard')}
 				>
-					{showUpload ? "Cancel" : "+ Upload"}
+					{showUpload ? t('common.cancel') : "+ " + t('character.upload')}
 				</button>
 			</div>
 
@@ -99,7 +101,7 @@ export function CharacterCardSelector({
 						disabled={disabled}
 						className="file-input"
 					/>
-					<p className="upload-hint">Upload a Character Card V3 JSON file</p>
+					<p className="upload-hint">{t('upload.uploadHint')}</p>
 				</div>
 			) : (
 				<>
@@ -110,7 +112,7 @@ export function CharacterCardSelector({
 						disabled={disabled || cards.length === 0}
 						className="character-select"
 					>
-						<option value="">No character (default chat)</option>
+						<option value="">{t('character.noCharacterSelected')}</option>
 						{cards.map((card) => (
 							<option key={card.id} value={card.id}>
 								{card.data.data.name}
@@ -126,7 +128,7 @@ export function CharacterCardSelector({
 							</div>
 							{selectedCard.data.data.personality && (
 								<div className="character-personality">
-									<strong>Personality:</strong> {selectedCard.data.data.personality}
+									<strong>{t('character.personality')}:</strong> {selectedCard.data.data.personality}
 								</div>
 							)}
 						</div>

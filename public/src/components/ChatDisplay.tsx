@@ -5,6 +5,7 @@
 
 
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import type { Message } from "../../../src/models/message.js";
 
 export interface ChatDisplayProps {
@@ -15,6 +16,7 @@ export interface ChatDisplayProps {
 }
 
 export function ChatDisplay({ messages, isStreaming = false, hasMoreMessages = false, loadMoreMessages = () => { } }: ChatDisplayProps) {
+	const { t } = useTranslation();
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
 	// Auto-scroll to bottom when messages change or streaming status changes
@@ -23,16 +25,16 @@ export function ChatDisplay({ messages, isStreaming = false, hasMoreMessages = f
 	}, [messages, isStreaming]);
 
 	return (
-		<div className="chat-display" role="log" aria-live="polite" aria-label="Chat messages">
+		<div className="chat-display" role="log" aria-live="polite" aria-label={t('chat.messagesLabel')}>
 			{messages.length === 0 ? (
 				<div className="empty-state" role="status">
-					No messages yet. Start a conversation!
+					{t('chat.noMessages')}
 				</div>
 			) : (
 				<>
 					{hasMoreMessages && (
-						<button className="load-more-button" onClick={loadMoreMessages} aria-label="Load more messages">
-							Load earlier messages
+						<button className="load-more-button" onClick={loadMoreMessages} aria-label={t('chat.loadMore')}>
+							{t('chat.loadMore')}
 						</button>
 					)}
 					<div className="messages">
@@ -41,20 +43,20 @@ export function ChatDisplay({ messages, isStreaming = false, hasMoreMessages = f
 								key={message.id}
 								className={`message message-${message.role}`}
 								role="article"
-								aria-label={`${message.role} message`}
+								aria-label={`${message.role} ${t('chat.message')}`}
 							>
-								<div className="message-role" aria-label="Message sender">
+								<div className="message-role" aria-label={t('chat.messageSender')}>
 									{message.role}
 								</div>
 								<div className="message-content">{message.content}</div>
-								<div className="message-timestamp" aria-label="Message time">
+								<div className="message-timestamp" aria-label={t('chat.messageTime')}>
 									{new Date(message.created_at).toLocaleTimeString()}
 								</div>
 							</div>
 						))}
 						{isStreaming && (
-							<div className="message message-assistant typing-indicator" role="status" aria-label="AI is typing">
-								<div className="message-role">assistant</div>
+							<div className="message message-assistant typing-indicator" role="status" aria-label={t('chat.aiTyping')}>
+								<div className="message-role">{t('chat.assistant')}</div>
 								<div className="typing-dots">
 									<span className="typing-dot"></span>
 									<span className="typing-dot"></span>

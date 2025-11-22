@@ -4,8 +4,10 @@
  */
 
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
 import type { User } from "@supabase/supabase-js";
 import { UserMenu } from "./UserMenu.js";
+import { LanguageSwitcher } from "./LanguageSwitcher.js";
 
 export interface GalleryHeaderProps {
 	searchQuery: string;
@@ -24,27 +26,30 @@ export const GalleryHeader = memo(function GalleryHeader({
 	user,
 	onAuthAction,
 }: GalleryHeaderProps) {
+	const { t } = useTranslation();
+
 	return (
 		<header className="gallery-header">
-			<h1>Character Gallery</h1>
+			<h1>{t('gallery.title')}</h1>
 			<div className="gallery-header-actions">
 				{showSearch && (
 					<input
 						type="text"
 						className="gallery-search"
-						placeholder="Search characters..."
+						placeholder={t('gallery.searchPlaceholder')}
 						value={searchQuery}
 						onChange={(e) => onSearchChange(e.target.value)}
-						aria-label="Search characters by name, description, or personality"
+						aria-label={t('gallery.searchLabel')}
 					/>
 				)}
+				<LanguageSwitcher />
 				{user && (
 					<button
 						className="upload-button"
 						onClick={onUpload}
-						aria-label="Upload a new character card"
+						aria-label={t('gallery.uploadLabel')}
 					>
-						+ Upload Character
+						{t('gallery.uploadCharacter')}
 					</button>
 				)}
 				{user ? (
@@ -53,9 +58,9 @@ export const GalleryHeader = memo(function GalleryHeader({
 					<button
 						className="auth-button"
 						onClick={onAuthAction}
-						aria-label="Sign in"
+						aria-label={t('auth.login')}
 					>
-						Sign In
+						{t('auth.login')}
 					</button>
 				)}
 			</div>

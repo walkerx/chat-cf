@@ -4,6 +4,7 @@
  */
 
 import { useState, FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface ChatInputFormProps {
 	onSubmit: (prompt: string) => void;
@@ -18,6 +19,7 @@ export function ChatInputForm({
 	isStreaming,
 	disabled = false,
 }: ChatInputFormProps) {
+	const { t } = useTranslation();
 	const [input, setInput] = useState("");
 
 	const handleSubmit = (e: FormEvent) => {
@@ -43,32 +45,32 @@ export function ChatInputForm({
 				type="text"
 				value={input}
 				onChange={(e) => setInput(e.target.value)}
-				placeholder="Type your message..."
+				placeholder={t('chat.inputPlaceholder')}
 				disabled={disabled || isStreaming}
 				className="chat-input"
 				aria-label="Message input"
 				aria-describedby="chat-input-hint"
 			/>
 			<span id="chat-input-hint" style={{ display: 'none' }}>
-				Type your message and press Enter or click Send
+				{t('chat.inputPlaceholder')}
 			</span>
 			{isStreaming ? (
 				<button
 					type="button"
 					onClick={handleCancel}
 					className="chat-button chat-button-cancel"
-					aria-label="Cancel streaming message"
+					aria-label={t('chat.cancelStreaming')}
 				>
-					Cancel
+					{t('common.cancel')}
 				</button>
 			) : (
 				<button
 					type="submit"
 					disabled={disabled || isStreaming || !input.trim()}
 					className="chat-button chat-button-submit"
-					aria-label="Send message"
+					aria-label={t('chat.send')}
 				>
-					Send
+					{t('chat.send')}
 				</button>
 			)}
 		</form>

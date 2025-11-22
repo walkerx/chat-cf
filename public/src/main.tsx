@@ -8,6 +8,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ChatProvider } from "./contexts/ChatContext.js";
 import { AuthProvider } from "./contexts/AuthContext.js";
 import { AppRoot } from "./AppRoot.js";
+import "./i18n.js";
 import "./styles/app.css";
 import "./styles/gallery.css";
 import "./styles/chat.css";

@@ -1,0 +1,120 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭"
+  },
+  "app": {
+    "title": "AI 角色扮演游戏",
+    "newConversation": "+ 新对话",
+    "characterGreeting": "角色问候语"
+  },
+  "chat": {
+    "inputPlaceholder": "输入消息...",
+    "send": "发送",
+    "streaming": "AI 正在回复中...",
+    "cancelStreaming": "停止生成",
+    "emptyState": "选择一个角色开始对话",
+    "noMessages": "还没有消息,开始聊天吧!",
+    "loadMore": "加载更早的消息",
+    "messagesLabel": "聊天消息",
+    "message": "消息",
+    "messageSender": "发送者",
+    "messageTime": "消息时间",
+    "aiTyping": "AI 正在输入中",
+    "assistant": "助手"
+  },
+  "character": {
+    "selectCharacter": "选择角色",
+    "noCharacters": "暂无可用角色",
+    "uploadCard": "上传角色卡片",
+    "cardName": "角色名称",
+    "cardDescription": "角色描述",
+    "deleteCard": "删除角色卡片",
+    "deleteConfirm": "确定要删除这个角色卡片吗?",
+    "upload": "上传",
+    "loading": "加载角色卡片中...",
+    "loadError": "加载角色卡片失败",
+    "noCharacterSelected": "无角色 (默认对话)",
+    "personality": "性格"
+  },
+  "gallery": {
+    "title": "角色画廊",
+    "backToChat": "返回聊天",
+    "uploadCharacter": "+ 上传角色",
+    "noCharacters": "暂无角色卡片",
+    "uploadPrompt": "上传你的第一个角色卡片开始使用",
+    "searchPlaceholder": "搜索角色...",
+    "searchLabel": "按名称、描述或性格搜索角色",
+    "uploadLabel": "上传新的角色卡片",
+    "loading": "加载角色中...",
+    "loadError": "加载角色失败",
+    "noSearchResults": "没有匹配的角色。",
+    "deleteTitle": "删除角色",
+    "deleteMessage": "确定要删除 \"{{name}}\" 吗？",
+    "deleteMessageWithConversations": "确定要删除 \"{{name}}\" 吗？该角色有 {{count}} 个对话{{plural}}将变为孤立状态。此操作无法撤销。",
+    "deleteConfirm": "删除",
+    "deleteCancel": "取消",
+    "undoWarning": "此操作无法撤销。",
+    "retryButton": "重试",
+    "errorPrefix": "错误：",
+    "authPrompt": "请登录以与角色聊天"
+  },
+  "upload": {
+    "title": "上传角色卡片",
+    "dragDrop": "拖拽文件到此处或点击上传",
+    "supportedFormats": "支持的格式: JSON, PNG (带有嵌入数据)",
+    "uploading": "上传中...",
+    "success": "上传成功",
+    "error": "上传失败",
+    "invalidFormat": "无效的角色卡片格式",
+    "uploadHint": "上传一个 Character Card V3 JSON 文件",
+    "invalidJSON": "无效的 JSON 格式。请上传有效的 JSON 文件。",
+    "invalidSpec": "无效的角色卡片规范。期望 'chara_card_v3'。",
+    "invalidVersion": "无效的角色卡片版本。期望 '3.0'。",
+    "missingData": "角色卡片缺少 'data' 字段。",
+    "missingName": "角色卡片必须有非空的 'name' 字段。",
+    "missingDescription": "角色卡片必须有非空的 'description' 字段。",
+    "missingFirstMessage": "角色卡片必须有非空的 'first_mes' 字段。",
+    "selectFile": "选择一个 Character Card V3 JSON 文件上传。",
+    "fileRequirements": "文件必须包含有效的 CCv3 格式，包括 name、description 和 first_mes 字段。",
+    "selectFileLabel": "选择角色卡片 JSON 文件",
+    "closeModal": "关闭上传弹窗",
+    "cancelUpload": "取消上传"
+  },
+  "user": {
+    "menu": "用户菜单",
+    "settings": "设置",
+    "logout": "登出",
+    "nickname": "昵称",
+    "setNickname": "设置昵称",
+    "nicknamePrompt": "请输入你的昵称"
+  },
+  "auth": {
+    "login": "登录",
+    "signup": "注册",
+    "email": "邮箱",
+    "password": "密码",
+    "loginSuccess": "登录成功",
+    "signupSuccess": "注册成功",
+    "authError": "认证失败"
+  },
+  "error": {
+    "generic": "发生错误,请稍后重试",
+    "network": "网络连接失败",
+    "notFound": "未找到资源",
+    "unauthorized": "未授权访问",
+    "serverError": "服务器错误",
+    "retry": "重试",
+    "dismiss": "关闭错误消息"
+  },
+  "meta": {
+    "description": "体验AI驱动的角色扮演游戏,与多样化的AI角色进行实时对话互动。支持自定义角色卡片,深度剧情推进,打造属于你的独特故事世界。",
+    "keywords": "AI RPG,角色扮演游戏,AI对话,角色卡片,AI聊天,互动小说,文字冒险,AI角色,虚拟角色,剧情游戏"
+  }
+}

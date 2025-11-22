@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { CharacterCardListItem } from "../services/api.js";
 import { listCharacterCards, listConversations, deleteCharacterCard } from "../services/api.js";
 import { getOrCreateSessionId } from "../services/session.js";
@@ -24,6 +25,7 @@ export interface CharacterWithHistory {
 }
 
 export function GalleryPage() {
+	const { t } = useTranslation();
 	const [characters, setCharacters] = useState<CharacterWithHistory[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
@@ -84,18 +86,18 @@ export function GalleryPage() {
 
 					// Network errors
 					if (errorMessage.includes("network") || errorMessage.includes("fetch") || errorMessage.includes("failed to fetch")) {
-						setError("Network error. Please check your connection and try again.");
+						setError(t('error.network'));
 					}
 					// Failed to load conversations (non-critical)
 					else if (errorMessage.includes("conversation")) {
-						setError("Failed to load conversation history. Characters will still be displayed.");
+						setError(t('gallery.loadError') + '. ' + t('gallery.noCharacters'));
 					}
 					// Generic error
 					else {
-						setError(err.message || "Failed to load characters");
+						setError(err.message || t('gallery.loadError'));
 					}
 				} else {
-					setError("An unexpected error occurred while loading characters");
+					setError(t('error.generic'));
 				}
 			} finally {
 				setLoading(false);
@@ -245,7 +247,7 @@ export function GalleryPage() {
 		return (
 			<div className="gallery-page">
 				<div className="gallery-loading" role="status" aria-live="polite">
-					Loading characters...
+					{t('gallery.loading')}
 				</div>
 			</div>
 		);
@@ -255,9 +257,9 @@ export function GalleryPage() {
 		return (
 			<div className="gallery-page">
 				<div className="gallery-error" role="alert">
-					<p>Error: {error}</p>
-					<button onClick={() => window.location.reload()} aria-label="Retry loading characters">
-						Retry
+					<p>{t('gallery.errorPrefix')} {error}</p>
+					<button onClick={() => window.location.reload()} aria-label={t('gallery.retryButton')}>
+						{t('gallery.retryButton')}
 					</button>
 				</div>
 			</div>
@@ -277,7 +279,7 @@ export function GalleryPage() {
 
 			{filteredCharacters.length === 0 && debouncedSearchQuery && (
 				<div className="gallery-empty" role="status" aria-live="polite">
-					<p>No characters match your search.</p>
+					<p>{t('gallery.noSearchResults')}</p>
 				</div>
 			)}
 
@@ -300,14 +302,18 @@ export function GalleryPage() {
 
 			{deleteConfirm && (
 				<ConfirmDialog
-					title="Delete Character"
+					title={t('gallery.deleteTitle')}
 					message={
 						deleteConfirm.hasConversations
-							? `Are you sure you want to delete "${deleteConfirm.characterName}"? This character has ${deleteConfirm.conversationCount} conversation${deleteConfirm.conversationCount > 1 ? "s" : ""} that will become orphaned. This action cannot be undone.`
-							: `Are you sure you want to delete "${deleteConfirm.characterName}"? This action cannot be undone.`
+							? t('gallery.deleteMessageWithConversations', {
+								name: deleteConfirm.characterName,
+								count: deleteConfirm.conversationCount,
+								plural: deleteConfirm.conversationCount > 1 ? 's' : ''
+							}) + ' ' + t('gallery.undoWarning')
+							: t('gallery.deleteMessage', { name: deleteConfirm.characterName }) + ' ' + t('gallery.undoWarning')
 					}
-					confirmLabel="Delete"
-					cancelLabel="Cancel"
+					confirmLabel={t('gallery.deleteConfirm')}
+					cancelLabel={t('gallery.deleteCancel')}
 					onConfirm={confirmDelete}
 					onCancel={cancelDelete}
 					isDestructive={true}
@@ -315,7 +321,7 @@ export function GalleryPage() {
 			)}
 
 			{showAuthPrompt && (
-				<AuthPrompt message="Please sign in to chat with characters" />
+				<AuthPrompt message={t('gallery.authPrompt')} />
 			)}
 		</div>
 	);

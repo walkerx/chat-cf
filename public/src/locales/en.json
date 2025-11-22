@@ -1,0 +1,120 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
+  },
+  "app": {
+    "title": "AI Role-Playing Game",
+    "newConversation": "+ New Conversation",
+    "characterGreeting": "Character Greeting"
+  },
+  "chat": {
+    "inputPlaceholder": "Type a message...",
+    "send": "Send",
+    "streaming": "AI is responding...",
+    "cancelStreaming": "Stop Generation",
+    "emptyState": "Select a character to start chatting",
+    "noMessages": "No messages yet. Start a conversation!",
+    "loadMore": "Load earlier messages",
+    "messagesLabel": "Chat messages",
+    "message": "message",
+    "messageSender": "Message sender",
+    "messageTime": "Message time",
+    "aiTyping": "AI is typing",
+    "assistant": "assistant"
+  },
+  "character": {
+    "selectCharacter": "Select Character",
+    "noCharacters": "No characters available",
+    "uploadCard": "Upload Character Card",
+    "cardName": "Character Name",
+    "cardDescription": "Character Description",
+    "deleteCard": "Delete Character Card",
+    "deleteConfirm": "Are you sure you want to delete this character card?",
+    "upload": "Upload",
+    "loading": "Loading character cards...",
+    "loadError": "Failed to load character cards",
+    "noCharacterSelected": "No character (default chat)",
+    "personality": "Personality"
+  },
+  "gallery": {
+    "title": "Character Gallery",
+    "backToChat": "Back to Chat",
+    "uploadCharacter": "+ Upload Character",
+    "noCharacters": "No character cards available",
+    "uploadPrompt": "Upload your first character card to get started",
+    "searchPlaceholder": "Search characters...",
+    "searchLabel": "Search characters by name, description, or personality",
+    "uploadLabel": "Upload a new character card",
+    "loading": "Loading characters...",
+    "loadError": "Failed to load characters",
+    "noSearchResults": "No characters match your search.",
+    "deleteTitle": "Delete Character",
+    "deleteMessage": "Are you sure you want to delete \"{{name}}\"?",
+    "deleteMessageWithConversations": "Are you sure you want to delete \"{{name}}\"? This character has {{count}} conversation{{plural}} that will become orphaned. This action cannot be undone.",
+    "deleteConfirm": "Delete",
+    "deleteCancel": "Cancel",
+    "undoWarning": "This action cannot be undone.",
+    "retryButton": "Retry",
+    "errorPrefix": "Error:",
+    "authPrompt": "Please sign in to chat with characters"
+  },
+  "upload": {
+    "title": "Upload Character Card",
+    "dragDrop": "Drag and drop files here or click to upload",
+    "supportedFormats": "Supported formats: JSON, PNG (with embedded data)",
+    "uploading": "Uploading...",
+    "success": "Upload successful",
+    "error": "Upload failed",
+    "invalidFormat": "Invalid character card format",
+    "uploadHint": "Upload a Character Card V3 JSON file",
+    "invalidJSON": "Invalid JSON format. Please upload a valid JSON file.",
+    "invalidSpec": "Invalid character card spec. Expected 'chara_card_v3'.",
+    "invalidVersion": "Invalid character card version. Expected '3.0'.",
+    "missingData": "Character card missing 'data' field.",
+    "missingName": "Character card must have a non-empty 'name' field.",
+    "missingDescription": "Character card must have a non-empty 'description' field.",
+    "missingFirstMessage": "Character card must have a non-empty 'first_mes' field.",
+    "selectFile": "Select a Character Card V3 JSON file to upload.",
+    "fileRequirements": "The file must contain valid CCv3 format with name, description, and first_mes fields.",
+    "selectFileLabel": "Select character card JSON file",
+    "closeModal": "Close upload modal",
+    "cancelUpload": "Cancel upload"
+  },
+  "user": {
+    "menu": "User Menu",
+    "settings": "Settings",
+    "logout": "Logout",
+    "nickname": "Nickname",
+    "setNickname": "Set Nickname",
+    "nicknamePrompt": "Please enter your nickname"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "loginSuccess": "Login successful",
+    "signupSuccess": "Sign up successful",
+    "authError": "Authentication failed"
+  },
+  "error": {
+    "generic": "An error occurred, please try again later",
+    "network": "Network connection failed",
+    "notFound": "Resource not found",
+    "unauthorized": "Unauthorized access",
+    "serverError": "Server error",
+    "retry": "Retry",
+    "dismiss": "Dismiss error message"
+  },
+  "meta": {
+    "description": "Experience AI-driven role-playing games with diverse AI characters in real-time interactive conversations. Supports custom character cards, deep storylines, and create your own unique story world.",
+    "keywords": "AI RPG, Role-Playing Game, AI Chat, Character Cards, AI Chatbot, Interactive Fiction, Text Adventure, AI Characters, Virtual Characters, Story Game"
+  }
+}
