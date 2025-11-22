@@ -53,8 +53,8 @@ export function ChatPage() {
 				// Different character - set character and load conversation
 				chat.setCharacterCardId(characterId);
 
-				// Load character-specific conversation
-				await chat.loadCharacterConversation(characterId);
+				// Load character-specific conversation with username
+				await chat.loadCharacterConversation(characterId, username || undefined);
 			} catch (err) {
 				console.error("Failed to load character:", err);
 
@@ -87,7 +87,7 @@ export function ChatPage() {
 		}
 
 		loadCharacterData();
-	}, [characterId]);
+	}, [characterId, username]);
 
 	const handleBack = () => {
 		navigate("/");

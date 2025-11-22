@@ -13,6 +13,7 @@ import { createStandardErrorResponse, formatErrorAsStreamChunk } from "../utils/
 import { generateConversationId, type Conversation } from "../models/conversation.js";
 import { generateMessageId } from "../models/message.js";
 import { PromptBuilder, type CompiledContext } from "../services/prompt-builder.js";
+import { CBSProcessor } from "../services/cbs-processor.js";
 
 /**
  * POST /api/chat/stream
@@ -170,12 +171,24 @@ export async function handleChatStream(
 				// Load character card and save greeting as first message
 				const characterCardData = await db.getCharacterCard(characterCardId);
 				if (characterCardData && characterCardData.data.data.first_mes) {
+					// Process CBS macros in greeting (replace {{user}} and {{char}})
+					const cbsProcessor = new CBSProcessor();
+					const charName = characterCardData.data.data.nickname || characterCardData.data.data.name;
+					const processedGreeting = cbsProcessor.process(
+						characterCardData.data.data.first_mes,
+						{
+							charName,
+							userName,
+							conversationId,
+						}
+					);
+
 					const greetingMessageId = generateMessageId();
 					await db.createMessage(
 						greetingMessageId,
 						conversationId,
 						"assistant",
-						characterCardData.data.data.first_mes
+						processedGreeting
 					);
 				}
 			}

@@ -8,6 +8,7 @@ import type { Message } from "../../../src/models/message.js";
 import { streamChat, getConversation, getCharacterCard, getLatestCharacterConversation } from "../services/api.js";
 import { getOrCreateSessionId } from "../services/session.js";
 import { generateMessageId } from "../../../src/models/message.js";
+import { processCBSMacros } from "../utils/cbs.js";
 
 export interface ChatState {
 	messages: Message[];
@@ -33,7 +34,7 @@ export interface ChatContextValue {
 	setConversationId: (id: string | null) => void;
 	setCharacterCardId: (id: string | null) => void;
 	startNewConversation: () => void;
-	loadCharacterConversation: (characterId: string) => Promise<void>;
+	loadCharacterConversation: (characterId: string, userName?: string) => Promise<void>;
 	clearMessages: () => void;
 }
 
@@ -273,7 +274,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 	 * If no conversation exists, starts fresh with empty messages
 	 * Ensures conversation isolation between characters
 	 */
-	const loadCharacterConversation = useCallback(async (characterId: string) => {
+	const loadCharacterConversation = useCallback(async (characterId: string, userName?: string) => {
 		try {
 			setError(null);
 
@@ -295,14 +296,21 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 				// Load character greeting and add as first message
 				try {
 					const card = await getCharacterCard(characterId);
-					const greeting = card.data.data.first_mes;
+					let greeting = card.data.data.first_mes;
 
 					if (greeting) {
+						// Process CBS macros in greeting
+						const charName = card.data.data.nickname || card.data.data.name;
+						const processedGreeting = processCBSMacros(greeting, {
+							charName,
+							userName: userName || "User",
+						});
+
 						const greetingMessage: Message = {
 							id: generateMessageId(),
 							conversation_id: "", // Will be set when conversation is created
 							role: "assistant",
-							content: greeting,
+							content: processedGreeting,
 							created_at: new Date().toISOString(),
 						};
 						setMessages([greetingMessage]);
