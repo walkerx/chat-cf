@@ -181,6 +181,8 @@ export function ChatPage() {
 					isStreaming={chat.isStreaming}
 					hasMoreMessages={chat.hasMoreMessages}
 					loadMoreMessages={chat.loadMoreMessages}
+					characterName={characterName}
+					userName={username}
 				/>
 				<ChatInputForm
 					onSubmit={handleSendMessage}
