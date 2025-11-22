@@ -128,6 +128,37 @@ export function ChatPage() {
 		);
 	}
 
+	// Show login prompt if not authenticated
+	if (!user) {
+		return (
+			<div className="chat-page" role="main">
+				<ChatHeader
+					characterName={characterName}
+					onBack={handleBack}
+					onNewConversation={handleNewConversation}
+					isStreaming={false}
+					user={user}
+					onAuthAction={handleAuthAction}
+				/>
+				<main className="chat-content" aria-label="Chat conversation">
+					<div className="auth-required-overlay" role="alert">
+						<div className="auth-required-content">
+							<h2>Authentication Required</h2>
+							<p>Please sign in to start chatting with characters.</p>
+							<button
+								className="auth-required-button"
+								onClick={() => navigate('/auth')}
+								aria-label="Go to sign in page"
+							>
+								Sign In to Continue
+							</button>
+						</div>
+					</div>
+				</main>
+			</div>
+		);
+	}
+
 	return (
 		<div className="chat-page" role="main">
 			<ChatHeader

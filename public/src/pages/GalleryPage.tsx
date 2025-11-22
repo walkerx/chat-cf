@@ -13,6 +13,7 @@ import { GalleryGrid } from "../components/GalleryGrid.js";
 import { GalleryHeader } from "../components/GalleryHeader.js";
 import { UploadModal } from "../components/UploadModal.js";
 import { ConfirmDialog } from "../components/ConfirmDialog.js";
+import { AuthPrompt } from "../components/AuthPrompt.js";
 import { useDebounce } from "../hooks/useDebounce.js";
 
 export interface CharacterWithHistory {
@@ -38,6 +39,7 @@ export function GalleryPage() {
 	const sessionId = getOrCreateSessionId();
 	const navigate = useNavigate();
 	const { user, signOut } = useAuth();
+	const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
 	// Load characters and their conversation history
 	useEffect(() => {
@@ -123,12 +125,24 @@ export function GalleryPage() {
 	}, [characters, debouncedSearchQuery]);
 
 	const handleSelectCharacter = useCallback((characterId: string) => {
+		if (!user) {
+			// Not logged in - show prompt and redirect
+			setShowAuthPrompt(true);
+			setTimeout(() => setShowAuthPrompt(false), 3000);
+			setTimeout(() => navigate('/auth'), 500);
+			return;
+		}
 		navigate(`/chat/${characterId}`);
-	}, [navigate]);
+	}, [navigate, user]);
 
 	const handleUpload = useCallback(() => {
+		if (!user) {
+			// Not logged in - redirect to auth page
+			navigate('/auth');
+			return;
+		}
 		setShowUploadModal(true);
-	}, []);
+	}, [user, navigate]);
 
 	const handleUploadSuccess = useCallback((newCard: CharacterCardListItem) => {
 		// Add the new character to the list with no conversation history
@@ -298,6 +312,10 @@ export function GalleryPage() {
 					onCancel={cancelDelete}
 					isDestructive={true}
 				/>
+			)}
+
+			{showAuthPrompt && (
+				<AuthPrompt message="Please sign in to chat with characters" />
 			)}
 		</div>
 	);

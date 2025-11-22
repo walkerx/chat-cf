@@ -611,6 +611,47 @@
 	box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
 }
 
+/* Auth Prompt Tooltip */
+.auth-prompt {
+	position: fixed;
+	bottom: 2rem;
+	left: 50%;
+	transform: translateX(-50%);
+	background: rgba(15, 17, 21, 0.95);
+	border: 1px solid var(--primary-color);
+	border-radius: var(--radius-md);
+	padding: 1rem 1.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+	z-index: 1000;
+	animation: slideUpFade 0.3s ease-out;
+	backdrop-filter: blur(10px);
+}
+
+@keyframes slideUpFade {
+	from {
+		opacity: 0;
+		transform: translateX(-50%) translateY(20px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateX(-50%) translateY(0);
+	}
+}
+
+.auth-prompt-icon {
+	font-size: 1.25rem;
+}
+
+.auth-prompt-text {
+	color: var(--text-primary);
+	font-size: 0.9rem;
+	font-weight: 500;
+}
+
 .modal-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;

@@ -37,13 +37,15 @@ export const GalleryHeader = memo(function GalleryHeader({
 						aria-label="Search characters by name, description, or personality"
 					/>
 				)}
-				<button
-					className="upload-button"
-					onClick={onUpload}
-					aria-label="Upload a new character card"
-				>
-					+ Upload Character
-				</button>
+				{user && (
+					<button
+						className="upload-button"
+						onClick={onUpload}
+						aria-label="Upload a new character card"
+					>
+						+ Upload Character
+					</button>
+				)}
 				<button
 					className="auth-button"
 					onClick={onAuthAction}
