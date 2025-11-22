@@ -207,7 +207,33 @@ export class LorebookEngine {
       }
     }
 
-    // Check primary keys
+    // Check if selective mode is enabled
+    if (entry.selective && entry.secondary_keys && entry.secondary_keys.length > 0) {
+      // Selective mode: BOTH primary keys AND secondary keys must match
+      let primaryMatched = false;
+      let secondaryMatched = false;
+
+      // Check primary keys
+      for (const key of entry.keys) {
+        if (this.keyMatches(key, textToScan, entry.use_regex, entry.case_sensitive)) {
+          primaryMatched = true;
+          break;
+        }
+      }
+
+      // Check secondary keys
+      for (const key of entry.secondary_keys) {
+        if (this.keyMatches(key, textToScan, entry.use_regex, entry.case_sensitive)) {
+          secondaryMatched = true;
+          break;
+        }
+      }
+
+      // Both must match in selective mode
+      return primaryMatched && secondaryMatched;
+    }
+
+    // Non-selective mode: Check primary keys
     for (const key of entry.keys) {
       if (this.keyMatches(key, textToScan, entry.use_regex, entry.case_sensitive)) {
         return true;

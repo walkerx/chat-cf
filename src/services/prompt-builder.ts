@@ -205,7 +205,10 @@ export class PromptBuilder {
       ...dynamicLorebookEntries,
     ];
 
-    // Build structured messages array instead of rendering template
+    // Group lorebook entries by position
+    const entriesByPosition = this.groupLorebookByPosition(allLorebookEntries);
+
+    // Build structured messages array
     const structuredMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
 
     // Add system prompt if present
@@ -216,11 +219,19 @@ export class PromptBuilder {
       });
     }
 
+    // Add entries with position "before_desc" or "before_char"
+    this.addEntriesAtPosition(structuredMessages, entriesByPosition, 'before_desc');
+    this.addEntriesAtPosition(structuredMessages, entriesByPosition, 'before_char');
+
     // Add character description
     structuredMessages.push({
       role: 'system',
       content: context.description,
     });
+
+    // Add entries with position "after_desc" or "after_char"
+    this.addEntriesAtPosition(structuredMessages, entriesByPosition, 'after_desc');
+    this.addEntriesAtPosition(structuredMessages, entriesByPosition, 'after_char');
 
     // Add personality if present
     if (context.personality) {
@@ -228,6 +239,8 @@ export class PromptBuilder {
         role: 'system',
         content: `Personality: ${context.personality}`,
       });
+      // Add entries with position "personality"
+      this.addEntriesAtPosition(structuredMessages, entriesByPosition, 'personality');
     }
 
     // Add scenario if present
@@ -236,18 +249,13 @@ export class PromptBuilder {
         role: 'system',
         content: `Scenario: ${context.scenario}`,
       });
+      // Add entries with position "scenario"
+      this.addEntriesAtPosition(structuredMessages, entriesByPosition, 'scenario');
     }
 
-    // Add lorebook entries (constant + dynamic)
-    for (const entry of allLorebookEntries) {
-      const role = entry.decorators.role || 'system';
-      structuredMessages.push({
-        role: role as 'system' | 'user' | 'assistant',
-        content: entry.processedContent,
-      });
-    }
+    // Add entries without specific position (default behavior)
+    this.addEntriesAtPosition(structuredMessages, entriesByPosition, undefined);
 
-    // Add conversation history (only user and assistant messages)
     // Add conversation history (only user and assistant messages)
     for (const msg of allMessages) {
       if (msg.role === 'user' || msg.role === 'assistant') {
@@ -270,6 +278,46 @@ export class PromptBuilder {
     }
 
     return structuredMessages;
+  }
+
+  /**
+   * Group lorebook entries by their position decorator
+   */
+  private groupLorebookByPosition(entries: MatchedEntry[]): Map<string | undefined, MatchedEntry[]> {
+    const grouped = new Map<string | undefined, MatchedEntry[]>();
+
+    for (const entry of entries) {
+      const position = entry.decorators.position || entry.entry.position;
+      if (!grouped.has(position)) {
+        grouped.set(position, []);
+      }
+      grouped.get(position)!.push(entry);
+    }
+
+    // Sort entries within each position group by insertion_order
+    for (const [_, entries] of grouped) {
+      entries.sort((a, b) => a.entry.insertion_order - b.entry.insertion_order);
+    }
+
+    return grouped;
+  }
+
+  /**
+   * Add lorebook entries at a specific position to the messages array
+   */
+  private addEntriesAtPosition(
+    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
+    entriesByPosition: Map<string | undefined, MatchedEntry[]>,
+    position: string | undefined
+  ): void {
+    const entries = entriesByPosition.get(position) || [];
+    for (const entry of entries) {
+      const role = entry.decorators.role || 'system';
+      messages.push({
+        role: role as 'system' | 'user' | 'assistant',
+        content: entry.processedContent,
+      });
+    }
   }
 
   /**
