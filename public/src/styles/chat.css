@@ -445,6 +445,54 @@
 	font-family: 'Courier New', monospace;
 }
 
+/* Typing Indicator */
+.typing-indicator {
+	opacity: 0.8;
+}
+
+.typing-dots {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.5rem 0;
+}
+
+.typing-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background-color: var(--primary-color);
+	animation: typingBounce 1.4s infinite ease-in-out;
+	box-shadow: 0 0 4px var(--primary-glow);
+}
+
+.typing-dot:nth-child(1) {
+	animation-delay: 0s;
+}
+
+.typing-dot:nth-child(2) {
+	animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+	animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+
+	0%,
+	60%,
+	100% {
+		transform: translateY(0);
+		opacity: 0.7;
+	}
+
+	30% {
+		transform: translateY(-10px);
+		opacity: 1;
+	}
+}
+
 /* Empty State */
 .empty-state {
 	text-align: center;

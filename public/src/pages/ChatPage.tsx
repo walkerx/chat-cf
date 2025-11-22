@@ -176,7 +176,12 @@ export function ChatPage() {
 
 			<main className="chat-content" aria-label="Chat conversation">
 				<ErrorDisplay error={chat.error} onDismiss={chat.clearError} />
-				<ChatDisplay messages={chat.messages} />
+				<ChatDisplay
+					messages={chat.messages}
+					isStreaming={chat.isStreaming}
+					hasMoreMessages={chat.hasMoreMessages}
+					loadMoreMessages={chat.loadMoreMessages}
+				/>
 				<ChatInputForm
 					onSubmit={handleSendMessage}
 					onCancel={chat.abortStream}

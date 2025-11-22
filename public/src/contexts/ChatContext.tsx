@@ -28,6 +28,7 @@ export interface ChatContextValue {
 	sessionId: string;
 	characterCardId: string | null;
 	characterGreeting: string | null;
+	hasMoreMessages: boolean;
 	sendMessage: (prompt: string, userName?: string) => Promise<void>;
 	abortStream: () => void;
 	clearError: () => void;
@@ -35,6 +36,7 @@ export interface ChatContextValue {
 	setCharacterCardId: (id: string | null) => void;
 	startNewConversation: () => void;
 	loadCharacterConversation: (characterId: string, userName?: string) => Promise<void>;
+	loadMoreMessages: () => Promise<void>;
 	clearMessages: () => void;
 }
 
@@ -87,8 +89,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 	const [error, setError] = useState<string | null>(null);
 	const [conversationId, setConversationId] = useState<string | null>(storedState.conversationId || null);
 	const [characterCardId, setCharacterCardId] = useState<string | null>(storedState.characterCardId || null);
+	const [hasMoreMessages, setHasMoreMessages] = useState<boolean>(false);
 	const [characterGreeting, setCharacterGreeting] = useState<string | null>(null);
 	const abortRef = useRef<(() => void) | null>(null);
+
+	// Load more messages (fetch full conversation)
+	const loadMoreMessages = useCallback(async () => {
+		if (!conversationId) {
+			return;
+		}
+		try {
+			const { messages: allMessages } = await getConversation(conversationId, sessionId);
+			setMessages(allMessages);
+			setHasMoreMessages(false);
+		} catch (err) {
+			console.error('Failed to load more messages:', err);
+			setError('Failed to load more messages');
+		}
+	}, [conversationId, sessionId]);
 
 	// Save state to storage whenever it changes
 	useEffect(() => {
@@ -266,6 +284,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		setMessages([]);
 		setError(null);
 		setCharacterGreeting(null);
+		setHasMoreMessages(false); // Reset hasMoreMessages
 		// Keep characterCardId so new conversation uses same character
 	}, []);
 
@@ -288,10 +307,18 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 					sessionId
 				);
 				setConversationId(latestConversation.id);
-				setMessages(historyMessages);
+
+				// Only show the last 5 rounds (10 messages: 5 user + 5 assistant)
+				// This keeps the UI clean and focused on recent conversation
+				const recentMessages = historyMessages.slice(-10);
+				setMessages(recentMessages);
+
+				// If there are more messages than shown, set hasMoreMessages to true
+				setHasMoreMessages(historyMessages.length > recentMessages.length);
 			} else {
 				// No conversation exists - start fresh with greeting
 				setConversationId(null);
+				setHasMoreMessages(false); // No conversation, so no more messages to load
 
 				// Load character greeting and add as first message
 				try {
@@ -349,6 +376,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 			// Start fresh on error
 			setConversationId(null);
 			setMessages([]);
+			setHasMoreMessages(false); // No conversation, so no more messages to load
 		}
 	}, [sessionId]);
 
@@ -358,9 +386,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 	 */
 	const clearMessages = useCallback(() => {
 		setMessages([]);
+		setHasMoreMessages(false); // No messages, so no more to load
 	}, []);
 
-	const value: ChatContextValue = {
+	const contextValue: ChatContextValue = {
 		messages,
 		isStreaming,
 		error,
@@ -368,6 +397,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		sessionId,
 		characterCardId,
 		characterGreeting,
+		hasMoreMessages,
 		sendMessage,
 		abortStream,
 		clearError,
@@ -375,10 +405,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		setCharacterCardId,
 		startNewConversation,
 		loadCharacterConversation,
+		loadMoreMessages,
 		clearMessages,
 	};
 
-	return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
+	return <ChatContext.Provider value={contextValue}>{children}</ChatContext.Provider>;
 }
 
 /**
