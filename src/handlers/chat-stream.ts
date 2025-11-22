@@ -163,9 +163,21 @@ export async function handleChatStream(
 			await db.createConversation(conversationId, sessionId, undefined, characterCardId);
 			messageHistory = [{ role: "user", content: prompt }];
 
-			// If character card provided, mark for use
+			// If character card provided, mark for use and save greeting message
 			if (characterCardId) {
 				useCharacterCardPrompt = true;
+
+				// Load character card and save greeting as first message
+				const characterCardData = await db.getCharacterCard(characterCardId);
+				if (characterCardData && characterCardData.data.data.first_mes) {
+					const greetingMessageId = generateMessageId();
+					await db.createMessage(
+						greetingMessageId,
+						conversationId,
+						"assistant",
+						characterCardData.data.data.first_mes
+					);
+				}
 			}
 		}
 	}

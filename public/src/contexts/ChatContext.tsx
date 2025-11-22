@@ -108,7 +108,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
 			try {
 				const card = await getCharacterCard(characterCardId);
-				setCharacterGreeting(card.data.data.first_mes);
+				const greeting = card.data.data.first_mes;
+				setCharacterGreeting(greeting);
+
+				// If this is a new conversation (no messages yet), add greeting as first message
+				if (greeting && messages.length === 0 && !conversationId) {
+					const greetingMessage: Message = {
+						id: generateMessageId(),
+						conversation_id: "", // Will be set when conversation is created
+						role: "assistant",
+						content: greeting,
+						created_at: new Date().toISOString(),
+					};
+					setMessages([greetingMessage]);
+				}
 			} catch (err) {
 				console.error("Failed to load character greeting:", err);
 				setCharacterGreeting(null);
@@ -116,7 +129,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		}
 
 		loadCharacterGreeting();
-	}, [characterCardId]);
+	}, [characterCardId, messages.length, conversationId]);
 
 	const sendMessage = useCallback(
 		async (prompt: string, userName?: string) => {
@@ -276,9 +289,30 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 				setConversationId(latestConversation.id);
 				setMessages(historyMessages);
 			} else {
-				// No conversation exists - start fresh
+				// No conversation exists - start fresh with greeting
 				setConversationId(null);
-				setMessages([]);
+
+				// Load character greeting and add as first message
+				try {
+					const card = await getCharacterCard(characterId);
+					const greeting = card.data.data.first_mes;
+
+					if (greeting) {
+						const greetingMessage: Message = {
+							id: generateMessageId(),
+							conversation_id: "", // Will be set when conversation is created
+							role: "assistant",
+							content: greeting,
+							created_at: new Date().toISOString(),
+						};
+						setMessages([greetingMessage]);
+					} else {
+						setMessages([]);
+					}
+				} catch (err) {
+					console.error("Failed to load character greeting:", err);
+					setMessages([]);
+				}
 			}
 		} catch (err) {
 			console.error("Failed to load character conversation:", err);

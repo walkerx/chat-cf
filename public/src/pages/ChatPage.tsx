@@ -175,12 +175,6 @@ export function ChatPage() {
 			/>
 
 			<main className="chat-content" aria-label="Chat conversation">
-				{chat.characterGreeting && chat.messages.length === 0 && (
-					<div className="character-greeting" role="complementary" aria-label="Character greeting message">
-						<div className="greeting-label">Character Greeting:</div>
-						<div className="greeting-content">{chat.characterGreeting}</div>
-					</div>
-				)}
 				<ErrorDisplay error={chat.error} onDismiss={chat.clearError} />
 				<ChatDisplay messages={chat.messages} />
 				<ChatInputForm
