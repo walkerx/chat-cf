@@ -4,9 +4,12 @@
  */
 
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { Message } from "../../../src/models/message.js";
+import type { CharacterCardV3 } from "../services/api.js";
+import { RegexScriptProcessor } from "../services/regex-script-processor.js";
+import { sanitizeHTML } from "../utils/sanitize.js";
 
 export interface ChatDisplayProps {
 	messages: Message[];
@@ -15,6 +18,7 @@ export interface ChatDisplayProps {
 	loadMoreMessages?: () => void;
 	characterName?: string | null;
 	userName?: string | null;
+	characterCard?: CharacterCardV3 | null;
 }
 
 export function ChatDisplay({
@@ -23,10 +27,26 @@ export function ChatDisplay({
 	hasMoreMessages = false,
 	loadMoreMessages = () => { },
 	characterName,
-	userName
+	userName,
+	characterCard
 }: ChatDisplayProps) {
 	const { t } = useTranslation();
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+
+	// Initialize regex script processor
+	const regexProcessor = useMemo(() => new RegexScriptProcessor(), []);
+
+	// Extract regex scripts from character card
+	const regexScripts = useMemo(() => {
+		if (!characterCard) return [];
+		return RegexScriptProcessor.extractScripts(characterCard);
+	}, [characterCard]);
+
+	// Extract allowed tags from scripts dynamically
+	// This avoids hardcoding specific tags like <dm>, <zbj> etc.
+	const allowedTags = useMemo(() => {
+		return RegexScriptProcessor.extractTagsFromScripts(regexScripts);
+	}, [regexScripts]);
 
 	// Auto-scroll to bottom when messages change or streaming status changes
 	useEffect(() => {
@@ -41,6 +61,31 @@ export function ChatDisplay({
 			return characterName || t('chat.assistant');
 		}
 		return role;
+	};
+
+	// Process message content with regex scripts
+	const processMessageContent = (message: Message): string => {
+		let content = message.content;
+
+		// Apply regex scripts if available
+		if (regexScripts.length > 0) {
+			try {
+				content = regexProcessor.process(
+					content,
+					regexScripts,
+					{
+						isAIMessage: message.role === 'assistant',
+						isMarkdown: true,
+					}
+				);
+			} catch (error) {
+				console.error('Failed to process regex scripts:', error);
+				// Fall back to original content on error
+			}
+		}
+
+		// Sanitize HTML for security, allowing dynamically extracted tags
+		return sanitizeHTML(content, allowedTags);
 	};
 
 	return (
@@ -67,7 +112,10 @@ export function ChatDisplay({
 								<div className="message-role" aria-label={t('chat.messageSender')}>
 									{getSenderName(message.role)}
 								</div>
-								<div className="message-content">{message.content}</div>
+								<div
+									className="message-content"
+									dangerouslySetInnerHTML={{ __html: processMessageContent(message) }}
+								/>
 								<div className="message-timestamp" aria-label={t('chat.messageTime')}>
 									{new Date(message.created_at).toLocaleTimeString()}
 								</div>

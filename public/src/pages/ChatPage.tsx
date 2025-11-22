@@ -13,6 +13,7 @@ import { ErrorDisplay } from "../components/ErrorDisplay.js";
 import { ChatHeader } from "../components/ChatHeader.js";
 import {
 	getCharacterCard,
+	type CharacterCardListItem,
 } from "../services/api.js";
 
 export function ChatPage() {
@@ -20,6 +21,7 @@ export function ChatPage() {
 	const navigate = useNavigate();
 	const chat = useChatContext();
 	const [characterName, setCharacterName] = useState<string | null>(null);
+	const [characterCard, setCharacterCard] = useState<CharacterCardListItem | null>(null);
 	const [loadingCharacter, setLoadingCharacter] = useState(true);
 	const [characterError, setCharacterError] = useState<string | null>(null);
 	const { user, signOut, username } = useAuth();
@@ -41,6 +43,7 @@ export function ChatPage() {
 				// Load character card from database
 				const card = await getCharacterCard(characterId);
 				setCharacterName(card.data.data.name);
+				setCharacterCard(card);
 
 				// Check if we're returning to the same character
 				// If so, preserve the existing state (messages, conversationId)
@@ -183,6 +186,7 @@ export function ChatPage() {
 					loadMoreMessages={chat.loadMoreMessages}
 					characterName={characterName}
 					userName={username}
+					characterCard={characterCard?.data}
 				/>
 				<ChatInputForm
 					onSubmit={handleSendMessage}
