@@ -1,0 +1,13 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Crawl delay
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://chat-cf.pages.dev/sitemap.xml
+
+# Disallow specific paths (if any)
+Disallow: /api/
+Disallow: /*.json$
