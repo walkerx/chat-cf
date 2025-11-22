@@ -168,7 +168,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 				created_at: new Date().toISOString(),
 			};
 
-			setMessages((prev) => [...prev, userMessage]);
+			// Create assistant message placeholder immediately
+			const assistantMessageId = generateMessageId();
+			const initialAssistantMessage: Message = {
+				id: assistantMessageId,
+				conversation_id: conversationId || "",
+				role: "assistant",
+				content: "", // Empty content initially
+				created_at: new Date().toISOString(),
+			};
+
+			setMessages((prev) => [...prev, userMessage, initialAssistantMessage]);
 
 			try {
 				const { chunks, abort } = await streamChat(
@@ -183,8 +193,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
 				abortRef.current = abort;
 
-				// Create assistant message placeholder
-				let assistantMessage: Message | null = null;
 				let fullContent = "";
 
 				for await (const chunk of chunks) {
@@ -201,35 +209,41 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 						} catch {
 							setError(chunk.text);
 						}
+						// Remove the empty assistant message on error if it's still empty
+						if (!fullContent) {
+							setMessages((prev) => prev.filter(m => m.id !== assistantMessageId));
+						}
 						break;
 					}
 
 					if (chunk.type === "content") {
 						fullContent += chunk.text;
 
-						// Update or create assistant message
-						if (!assistantMessage) {
-							assistantMessage = {
-								id: generateMessageId(),
-								conversation_id: chunk.conversationId || conversationId || "",
-								role: "assistant",
-								content: fullContent,
-								created_at: new Date().toISOString(),
-							};
-							setMessages((prev) => [...prev, assistantMessage!]);
-						} else {
-							// Update existing message
-							setMessages((prev) =>
-								prev.map((msg) =>
-									msg.id === assistantMessage!.id
-										? { ...msg, content: fullContent }
-										: msg
-								)
-							);
-						}
+						// Update existing message
+						setMessages((prev) =>
+							prev.map((msg) =>
+								msg.id === assistantMessageId
+									? {
+										...msg,
+										content: fullContent,
+										conversation_id: chunk.conversationId || conversationId || msg.conversation_id
+									}
+									: msg
+							)
+						);
 					}
 				}
 			} catch (err) {
+				// Remove the empty assistant message on error
+				setMessages((prev) => {
+					const msg = prev.find(m => m.id === assistantMessageId);
+					if (msg && !msg.content) {
+						return prev.filter(m => m.id !== assistantMessageId);
+					}
+					return prev;
+				});
+
+				// Handle specific error cases
 				// Handle specific error cases
 				let errorMessage = "Failed to send message";
 
