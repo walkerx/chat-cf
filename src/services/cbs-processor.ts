@@ -20,8 +20,9 @@ export class CBSProcessor {
     // 1. Extract and remove hidden keys first (they affect lorebook but not output)
     result = this.removeHiddenKeys(result);
 
-    // 2. Remove comments
+    // 2. Remove comments (both {{//}} and {{comment:}})
     result = this.removeComments(result);
+    result = this.removeInlineComments(result);
 
     // 3. Replace macros that generate content
     result = this.replaceChar(result, context.charName);
@@ -65,10 +66,11 @@ export class CBSProcessor {
 
   /**
    * Replace {{random:A,B,C}} with randomly selected value
+   * Supports escaped commas: \,
    */
   private replaceRandom(text: string): string {
     return text.replace(/\{\{random:([^}]+)\}\}/g, (match, options) => {
-      const choices = options.split(',').map((s: string) => s.trim());
+      const choices = this.splitWithEscapedCommas(options);
       if (choices.length === 0) return match;
       const randomIndex = Math.floor(Math.random() * choices.length);
       return choices[randomIndex];
@@ -77,10 +79,11 @@ export class CBSProcessor {
 
   /**
    * Replace {{pick:A,B,C}} with consistently selected value based on seed
+   * Supports escaped commas: \,
    */
   private replacePick(text: string, seed: string): string {
     return text.replace(/\{\{pick:([^}]+)\}\}/g, (match, options) => {
-      const choices = options.split(',').map((s: string) => s.trim());
+      const choices = this.splitWithEscapedCommas(options);
       if (choices.length === 0) return match;
 
       // Simple hash function for consistent selection
@@ -88,6 +91,21 @@ export class CBSProcessor {
       const index = Math.abs(hash) % choices.length;
       return choices[index];
     });
+  }
+
+  /**
+   * Split string by commas, respecting escaped commas (\,)
+   */
+  private splitWithEscapedCommas(text: string): string[] {
+    // Replace escaped commas with a placeholder
+    const placeholder = '\u0000';
+    const escaped = text.replace(/\\,/g, placeholder);
+
+    // Split by commas
+    const parts = escaped.split(',').map(s => s.trim());
+
+    // Restore escaped commas
+    return parts.map(part => part.replace(new RegExp(placeholder, 'g'), ','));
   }
 
   /**
@@ -123,6 +141,13 @@ export class CBSProcessor {
    */
   private removeHiddenKeys(text: string): string {
     return text.replace(/\{\{hidden_key:[^}]+\}\}/g, '');
+  }
+
+  /**
+   * Remove {{comment: text}} from text (inline comments)
+   */
+  private removeInlineComments(text: string): string {
+    return text.replace(/\{\{comment:\s*[^}]*\}\}/g, '');
   }
 
   /**
