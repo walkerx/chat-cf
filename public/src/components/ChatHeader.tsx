@@ -5,6 +5,7 @@
 
 
 import type { User } from "@supabase/supabase-js";
+import { UserMenu } from "./UserMenu.js";
 
 export interface ChatHeaderProps {
 	characterName: string | null;
@@ -42,13 +43,17 @@ export function ChatHeader({
 			>
 				+ New Chat
 			</button>
-			<button
-				className="auth-button"
-				onClick={onAuthAction}
-				aria-label={user ? "Sign out" : "Sign in"}
-			>
-				{user ? "Sign Out" : "Sign In"}
-			</button>
+			{user ? (
+				<UserMenu />
+			) : (
+				<button
+					className="auth-button"
+					onClick={onAuthAction}
+					aria-label="Sign in"
+				>
+					Sign In
+				</button>
+			)}
 		</header>
 	);
 }

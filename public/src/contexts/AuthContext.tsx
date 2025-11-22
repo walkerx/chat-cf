@@ -1,19 +1,22 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
     session: Session | null;
     user: User | null;
+    username: string | null;
     loading: boolean;
     signOut: () => Promise<void>;
+    updateUsername: (newUsername: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
+    const [username, setUsername] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -21,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
+            setUsername(session?.user?.user_metadata?.username ?? null);
             setLoading(false);
         });
 
@@ -30,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
+            setUsername(session?.user?.user_metadata?.username ?? null);
             setLoading(false);
         });
 
@@ -40,11 +45,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut();
     };
 
+    const updateUsername = async (newUsername: string) => {
+        if (!user) {
+            throw new Error('No user logged in');
+        }
+
+        // Update user metadata in Supabase
+        const { error } = await supabase.auth.updateUser({
+            data: { username: newUsername }
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        // Update local state
+        setUsername(newUsername);
+    };
+
     const value = {
         session,
         user,
+        username,
         loading,
         signOut,
+        updateUsername,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

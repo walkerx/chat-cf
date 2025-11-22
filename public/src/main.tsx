@@ -4,14 +4,10 @@
 
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { ChatProvider } from "./contexts/ChatContext.js";
 import { AuthProvider } from "./contexts/AuthContext.js";
-import { GalleryPage } from "./pages/GalleryPage.js";
-import { ChatPage } from "./pages/ChatPage.js";
-import AuthPage from "./components/AuthPage.js";
-import { GalleryErrorBoundary } from "./components/GalleryErrorBoundary.js";
-import { ChatErrorBoundary } from "./components/ChatErrorBoundary.js";
+import { AppRoot } from "./AppRoot.js";
 import "./styles/app.css";
 import "./styles/gallery.css";
 import "./styles/chat.css";
@@ -31,31 +27,11 @@ root.render(
 		<BrowserRouter>
 			<AuthProvider>
 				<ChatProvider>
-					<Routes>
-						<Route
-							path="/"
-							element={
-								<GalleryErrorBoundary>
-									<GalleryPage />
-								</GalleryErrorBoundary>
-							}
-						/>
-						<Route
-							path="/auth"
-							element={<AuthPage />}
-						/>
-						<Route
-							path="/chat/:characterId?"
-							element={
-								<ChatErrorBoundary>
-									<ChatPage />
-								</ChatErrorBoundary>
-							}
-						/>
-					</Routes>
+					<AppRoot />
 				</ChatProvider>
 			</AuthProvider>
 		</BrowserRouter>
 	</React.StrictMode>
 );
+
 

@@ -14,6 +14,7 @@ export interface ChatStreamRequest {
 	prompt: string;
 	conversationId?: string;
 	characterCardId?: string;
+	userName?: string;
 }
 
 export interface ChatStreamResponse {

@@ -22,7 +22,7 @@ export function ChatPage() {
 	const [characterName, setCharacterName] = useState<string | null>(null);
 	const [loadingCharacter, setLoadingCharacter] = useState(true);
 	const [characterError, setCharacterError] = useState<string | null>(null);
-	const { user, signOut } = useAuth();
+	const { user, signOut, username } = useAuth();
 
 	// Load character data and conversation when page loads
 	useEffect(() => {
@@ -105,6 +105,10 @@ export function ChatPage() {
 		}
 	};
 
+	const handleSendMessage = async (prompt: string) => {
+		await chat.sendMessage(prompt, username || undefined);
+	};
+
 	if (loadingCharacter) {
 		return (
 			<div className="chat-page" role="main">
@@ -180,7 +184,7 @@ export function ChatPage() {
 				<ErrorDisplay error={chat.error} onDismiss={chat.clearError} />
 				<ChatDisplay messages={chat.messages} />
 				<ChatInputForm
-					onSubmit={chat.sendMessage}
+					onSubmit={handleSendMessage}
 					onCancel={chat.abortStream}
 					isStreaming={chat.isStreaming}
 				/>

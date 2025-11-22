@@ -24,7 +24,7 @@ export async function handleChatStream(
 	const sessionId = c.req.header("X-Session-ID") || getOrGenerateSessionId(null);
 
 	// Parse request body
-	let body: { prompt?: string; conversationId?: string; characterCardId?: string };
+	let body: { prompt?: string; conversationId?: string; characterCardId?: string; userName?: string };
 	try {
 		body = await c.req.json();
 	} catch (error) {
@@ -40,6 +40,9 @@ export async function handleChatStream(
 	if (prompt.length > 10000) {
 		return c.json(createStandardErrorResponse("INVALID_REQUEST"), 400);
 	}
+
+	// Get userName from body or default to "User"
+	const userName = body.userName?.trim() || "User";
 
 	// Initialize services
 	const db = new DatabaseClient(c.env.DB);
@@ -185,7 +188,7 @@ export async function handleChatStream(
 		if (!compiledContext) {
 			compiledContext = await promptBuilder.compileStaticContext(
 				characterCardData.data,
-				"User" // Default user name, could be customized
+				userName
 			);
 
 			// Store compiled context in database for future use
@@ -213,7 +216,7 @@ export async function handleChatStream(
 			characterCard: characterCardData.data,
 			messages,
 			userPrompt: prompt,
-			userName: "User",
+			userName,
 			templateName: "default",
 			conversationId,
 		});

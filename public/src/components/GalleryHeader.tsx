@@ -5,6 +5,7 @@
 
 import { memo } from "react";
 import type { User } from "@supabase/supabase-js";
+import { UserMenu } from "./UserMenu.js";
 
 export interface GalleryHeaderProps {
 	searchQuery: string;
@@ -46,13 +47,17 @@ export const GalleryHeader = memo(function GalleryHeader({
 						+ Upload Character
 					</button>
 				)}
-				<button
-					className="auth-button"
-					onClick={onAuthAction}
-					aria-label={user ? "Sign out" : "Sign in"}
-				>
-					{user ? "Sign Out" : "Sign In"}
-				</button>
+				{user ? (
+					<UserMenu />
+				) : (
+					<button
+						className="auth-button"
+						onClick={onAuthAction}
+						aria-label="Sign in"
+					>
+						Sign In
+					</button>
+				)}
 			</div>
 		</header>
 	);

@@ -129,6 +129,34 @@
 	box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
 }
 
+/* User Menu in Chat Header - reuse gallery styles */
+.chat-header .user-menu {
+	position: relative;
+}
+
+.chat-header .user-menu-trigger {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.875rem;
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-sm);
+	background: rgba(0, 0, 0, 0.3);
+	color: var(--text-primary);
+	font-size: 0.85rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	text-transform: none;
+	white-space: nowrap;
+}
+
+.chat-header .user-menu-trigger:hover {
+	background: var(--surface-hover);
+	border-color: var(--primary-color);
+	box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+}
+
 /* Chat Content Area */
 .chat-content {
 	flex: 1;

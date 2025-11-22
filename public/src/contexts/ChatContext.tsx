@@ -27,7 +27,7 @@ export interface ChatContextValue {
 	sessionId: string;
 	characterCardId: string | null;
 	characterGreeting: string | null;
-	sendMessage: (prompt: string) => Promise<void>;
+	sendMessage: (prompt: string, userName?: string) => Promise<void>;
 	abortStream: () => void;
 	clearError: () => void;
 	setConversationId: (id: string | null) => void;
@@ -119,7 +119,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 	}, [characterCardId]);
 
 	const sendMessage = useCallback(
-		async (prompt: string) => {
+		async (prompt: string, userName?: string) => {
 			if (!prompt.trim()) {
 				return;
 			}
@@ -144,6 +144,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 						prompt,
 						conversationId: conversationId || undefined,
 						characterCardId: characterCardId || undefined,
+						userName: userName || undefined,
 					},
 					sessionId
 				);
