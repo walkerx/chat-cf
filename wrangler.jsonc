@@ -36,7 +36,8 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 	 */
 	"vars": { 
-	  "AI_MODEL": "deepseek/deepseek-v3.2-exp"
+	  "AI_MODEL": "deepseek/deepseek-v3.2-exp",
+	  "VITE_SUPABASE_URL": "https://jqgjvuzqlodkrqkimcfd.supabase.co"
 	}
 	/**
 	 * Note: Use secrets to store sensitive data like OPENROUTER_API_KEY.
