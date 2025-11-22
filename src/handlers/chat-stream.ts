@@ -141,6 +141,7 @@ export async function handleChatStream(
 						} catch (error) {
 							console.error("Failed to parse compiled context:", error);
 							// Will recompile below
+							compiledContext = undefined;
 						}
 					}
 				}
@@ -207,20 +208,36 @@ export async function handleChatStream(
 			return c.json(createStandardErrorResponse("NOT_FOUND"), 404);
 		}
 
+		// DEBUG: Log character card data
+		console.log(`[DEBUG] Character Card ID: ${characterCardId}`);
+		console.log(`[DEBUG] Character Card post_history_instructions: '${characterCardData.data.data.post_history_instructions}'`);
+
 		const promptBuilder = new PromptBuilder();
+
+		// Check if compiled context is stale (missing new fields)
+		// If character card has post_history_instructions but compiled context doesn't, force recompile
+		if (compiledContext && characterCardData.data.data.post_history_instructions && !compiledContext.postHistoryInstructions) {
+			console.log("[DEBUG] Compiled context is stale (missing post_history_instructions), forcing recompile");
+			compiledContext = undefined;
+		}
 
 		// Compile static context if not already compiled
 		if (!compiledContext) {
+			console.log("[DEBUG] Compiling static context...");
 			compiledContext = await promptBuilder.compileStaticContext(
 				characterCardData.data,
 				userName
 			);
+			console.log(`[DEBUG] Compiled Context postHistoryInstructions: '${compiledContext.postHistoryInstructions}'`);
 
 			// Store compiled context in database for future use
 			await db.updateConversationCompiledContext(
 				conversationId,
 				JSON.stringify(compiledContext)
 			);
+		} else {
+			console.log("[DEBUG] Using existing compiled context");
+			console.log(`[DEBUG] Existing Compiled Context postHistoryInstructions: '${compiledContext.postHistoryInstructions}'`);
 		}
 
 		// Convert message history from ChatCompletionMessageParam to Message[]
@@ -235,14 +252,12 @@ export async function handleChatStream(
 				created_at: new Date().toISOString(),
 			}));
 
-		// Build complete structured messages using PromptBuilder
 		messageHistory = await promptBuilder.buildPrompt({
 			compiledContext,
 			characterCard: characterCardData.data,
 			messages,
 			userPrompt: prompt,
 			userName,
-			templateName: "default",
 			conversationId,
 		});
 	}
