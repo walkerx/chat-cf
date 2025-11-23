@@ -8,6 +8,30 @@ import text from 'png-chunk-text';
 import type { CharacterCardV3 } from '../services/api.js';
 
 /**
+ * Decode base64 string with UTF-8 support
+ * atob() doesn't handle UTF-8 correctly, so we need this helper
+ */
+function base64DecodeUTF8(base64: string): string {
+    try {
+        // First decode base64 to binary string
+        const binaryString = atob(base64);
+
+        // Convert binary string to Uint8Array
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        // Decode UTF-8 bytes to string
+        const decoder = new TextDecoder('utf-8');
+        return decoder.decode(bytes);
+    } catch (error) {
+        console.error('Failed to decode base64 UTF-8:', error);
+        throw error;
+    }
+}
+
+/**
  * Extract Character Card V3 data from a PNG file
  * Looks for the 'ccv3' tEXt chunk containing base64-encoded JSON
  */
@@ -49,7 +73,7 @@ export async function extractCharacterCardFromPNG(file: File): Promise<Character
 
             if (charaChunk) {
                 const decoded = text.decode(charaChunk.data);
-                const jsonString = atob(decoded.text); // base64 decode
+                const jsonString = base64DecodeUTF8(decoded.text);
                 const cardData = JSON.parse(jsonString);
 
                 // Convert legacy format to V3 if needed
@@ -66,8 +90,8 @@ export async function extractCharacterCardFromPNG(file: File): Promise<Character
         // Decode the ccv3 chunk
         const decoded = text.decode(ccv3Chunk.data);
 
-        // The text is base64-encoded JSON
-        const jsonString = atob(decoded.text);
+        // The text is base64-encoded UTF-8 JSON
+        const jsonString = base64DecodeUTF8(decoded.text);
         const cardData = JSON.parse(jsonString);
 
         // Validate it's a V3 card
