@@ -44,7 +44,7 @@ export default defineConfig({
 	},
 	root: "./public",
 	envDir: "../",
-	publicDir: false,
+	publicDir: "../static",
 	base: "/",
 	server: {
 		proxy: {
