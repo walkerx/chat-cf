@@ -6,7 +6,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CharacterCardV3, CharacterCardListItem } from "../services/api.js";
-import { createCharacterCard } from "../services/api.js";
+import { createCharacterCard, uploadImage } from "../services/api.js";
+import { extractCharacterCardFromPNG, extractAvatarFromPNG } from "../utils/pngCharacterCard.js";
 
 export interface UploadModalProps {
 	onClose: () => void;
@@ -26,15 +27,40 @@ export function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
 			setUploading(true);
 			setError(null);
 
-			// Read file content
-			const text = await file.text();
-			
-			// Parse JSON
-			let card: any;
-			try {
-				card = JSON.parse(text);
-			} catch (parseError) {
-				throw new Error(t('upload.invalidJSON'));
+			let card: CharacterCardV3 | null = null;
+			let avatarUrl: string | undefined;
+
+			// Check if it's a PNG file
+			if (file.type === 'image/png') {
+				// Extract character card data from PNG
+				card = await extractCharacterCardFromPNG(file);
+
+				if (!card) {
+					throw new Error(t('upload.invalidFormat') + ' - No character card data found in PNG');
+				}
+
+				// Extract and convert the PNG image to WebP for avatar
+				try {
+					const avatarBlob = await extractAvatarFromPNG(file);
+					const avatarFile = new File([avatarBlob], 'avatar.webp', { type: 'image/webp' });
+					const uploadResult = await uploadImage(avatarFile);
+					avatarUrl = uploadResult.url;
+				} catch (avatarError) {
+					console.warn('Failed to extract/upload avatar from PNG:', avatarError);
+					// Continue without avatar - it's not critical
+				}
+			} else if (file.type === 'application/json' || file.name.endsWith('.json')) {
+				// Read JSON file content
+				const text = await file.text();
+
+				// Parse JSON
+				try {
+					card = JSON.parse(text);
+				} catch (parseError) {
+					throw new Error(t('upload.invalidJSON'));
+				}
+			} else {
+				throw new Error(t('upload.invalidFormat') + ' - Only JSON and PNG files are supported');
 			}
 
 			// Validate character card structure
@@ -68,8 +94,13 @@ export function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
 				throw new Error(t('upload.missingFirstMessage'));
 			}
 
+			// If we extracted an avatar URL, add it to the card data
+			if (avatarUrl) {
+				card.data.avatar = avatarUrl;
+			}
+
 			// Upload to server
-			const created = await createCharacterCard(card as CharacterCardV3);
+			const created = await createCharacterCard(card);
 			onUploadSuccess(created);
 		} catch (err) {
 			// Handle specific error cases
@@ -139,7 +170,7 @@ export function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
 
 					<input
 						type="file"
-						accept=".json,application/json"
+						accept=".json,.png,application/json,image/png"
 						onChange={handleFileUpload}
 						disabled={uploading}
 						className="file-input"

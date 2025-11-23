@@ -81,9 +81,9 @@
     "missingName": "角色卡片必须有非空的 'name' 字段。",
     "missingDescription": "角色卡片必须有非空的 'description' 字段。",
     "missingFirstMessage": "角色卡片必须有非空的 'first_mes' 字段。",
-    "selectFile": "选择一个 Character Card V3 JSON 文件上传。",
-    "fileRequirements": "文件必须包含有效的 CCv3 格式，包括 name、description 和 first_mes 字段。",
-    "selectFileLabel": "选择角色卡片 JSON 文件",
+    "selectFile": "选择一个 Character Card V3 JSON 或 PNG 文件上传。",
+    "fileRequirements": "支持 JSON 和 PNG 格式(带嵌入的 CCv3 数据)。PNG 图片将自动转换为 WebP 格式作为角色头像。",
+    "selectFileLabel": "选择角色卡片 JSON 或 PNG 文件",
     "closeModal": "关闭上传弹窗",
     "cancelUpload": "取消上传"
   },

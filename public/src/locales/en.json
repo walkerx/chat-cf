@@ -81,9 +81,9 @@
     "missingName": "Character card must have a non-empty 'name' field.",
     "missingDescription": "Character card must have a non-empty 'description' field.",
     "missingFirstMessage": "Character card must have a non-empty 'first_mes' field.",
-    "selectFile": "Select a Character Card V3 JSON file to upload.",
-    "fileRequirements": "The file must contain valid CCv3 format with name, description, and first_mes fields.",
-    "selectFileLabel": "Select character card JSON file",
+    "selectFile": "Select a Character Card V3 JSON or PNG file to upload.",
+    "fileRequirements": "Supports JSON and PNG formats (with embedded CCv3 data). PNG images will be automatically converted to WebP format for character avatars.",
+    "selectFileLabel": "Select character card JSON or PNG file",
     "closeModal": "Close upload modal",
     "cancelUpload": "Cancel upload"
   },
