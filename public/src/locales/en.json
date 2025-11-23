@@ -46,7 +46,7 @@
   "gallery": {
     "title": "Character Gallery",
     "backToChat": "Back to Chat",
-    "uploadCharacter": "+ Upload Character",
+    "uploadCharacter": "+ Upload",
     "noCharacters": "No character cards available",
     "uploadPrompt": "Upload your first character card to get started",
     "searchPlaceholder": "Search characters...",
