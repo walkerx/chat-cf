@@ -40,15 +40,14 @@ export function ChatPage() {
 				setLoadingCharacter(true);
 				setCharacterError(null);
 
-				// Load character card from database
-				const card = await getCharacterCard(characterId);
-				setCharacterName(card.data.data.name);
-				setCharacterCard(card);
-
 				// Check if we're returning to the same character
 				// If so, preserve the existing state (messages, conversationId)
 				if (chat.characterCardId === characterId) {
-					// Same character - state is already preserved
+					// Same character - update local state from context
+					if (chat.characterCard) {
+						setCharacterName(chat.characterCard.data.data.name);
+						setCharacterCard(chat.characterCard);
+					}
 					setLoadingCharacter(false);
 					return;
 				}
@@ -58,6 +57,12 @@ export function ChatPage() {
 
 				// Load character-specific conversation with username
 				await chat.loadCharacterConversation(characterId, username || undefined);
+
+				// Update local state from context after loading
+				if (chat.characterCard) {
+					setCharacterName(chat.characterCard.data.data.name);
+					setCharacterCard(chat.characterCard);
+				}
 			} catch (err) {
 				console.error("Failed to load character:", err);
 
@@ -91,6 +96,14 @@ export function ChatPage() {
 
 		loadCharacterData();
 	}, [characterId, username]);
+
+	// Update local character state when context changes
+	useEffect(() => {
+		if (chat.characterCard && chat.characterCardId === characterId) {
+			setCharacterName(chat.characterCard.data.data.name);
+			setCharacterCard(chat.characterCard);
+		}
+	}, [chat.characterCard, chat.characterCardId, characterId]);
 
 	const handleBack = () => {
 		navigate("/");

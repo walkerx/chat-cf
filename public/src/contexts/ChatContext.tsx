@@ -5,7 +5,7 @@
 
 import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from "react";
 import type { Message } from "../../../src/models/message.js";
-import { streamChat, getConversation, getCharacterCard, getLatestCharacterConversation } from "../services/api.js";
+import { streamChat, getConversation, getCharacterCard, getLatestCharacterConversation, type CharacterCardListItem } from "../services/api.js";
 import { getOrCreateSessionId } from "../services/session.js";
 import { generateMessageId } from "../../../src/models/message.js";
 import { processCBSMacros } from "../utils/cbs.js";
@@ -17,6 +17,7 @@ export interface ChatState {
 	conversationId: string | null;
 	sessionId: string;
 	characterCardId: string | null;
+	characterCard: CharacterCardListItem | null; // Add character card cache
 	characterGreeting: string | null;
 	streamEnabled: boolean;
 }
@@ -28,6 +29,7 @@ export interface ChatContextValue {
 	conversationId: string | null;
 	sessionId: string;
 	characterCardId: string | null;
+	characterCard: CharacterCardListItem | null;
 	characterGreeting: string | null;
 	streamEnabled: boolean;
 	hasMoreMessages: boolean;
@@ -96,6 +98,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 	const [streamEnabled, setStreamEnabled] = useState<boolean>(storedState.streamEnabled ?? true);
 	const [hasMoreMessages, setHasMoreMessages] = useState<boolean>(false);
 	const [characterGreeting, setCharacterGreeting] = useState<string | null>(null);
+	const [characterCard, setCharacterCard] = useState<CharacterCardListItem | null>(null); // Add character card cache
 	const abortRef = useRef<(() => void) | null>(null);
 
 	// Load more messages (fetch full conversation)
@@ -128,21 +131,30 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		async function loadCharacterGreeting() {
 			if (!characterCardId) {
 				setCharacterGreeting(null);
+				setCharacterCard(null); // Clear card cache when character changes
 				return;
 			}
 
 			try {
-				const card = await getCharacterCard(characterCardId);
-				const greeting = card.data.data.first_mes;
+				const cardItem = await getCharacterCard(characterCardId);
+				const greeting = cardItem.data.data.first_mes;
+				setCharacterCard(cardItem); // Cache the full character card item
 				setCharacterGreeting(greeting);
 
 				// If this is a new conversation (no messages yet), add greeting as first message
 				if (greeting && messages.length === 0 && !conversationId) {
+					// Process CBS macros in greeting
+					const charName = cardItem.data.data.nickname || cardItem.data.data.name;
+					const processedGreeting = processCBSMacros(greeting, {
+						charName,
+						userName: "User", // Default to "User" if no username available
+					});
+
 					const greetingMessage: Message = {
 						id: generateMessageId(),
 						conversation_id: "", // Will be set when conversation is created
 						role: "assistant",
-						content: greeting,
+						content: processedGreeting,
 						created_at: new Date().toISOString(),
 					};
 					setMessages([greetingMessage]);
@@ -154,7 +166,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		}
 
 		loadCharacterGreeting();
-	}, [characterCardId, messages.length, conversationId]);
+	}, [characterCardId]);
 
 	const sendMessage = useCallback(
 		async (prompt: string, userName?: string) => {
@@ -343,12 +355,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
 				// Load character greeting and add as first message
 				try {
-					const card = await getCharacterCard(characterId);
-					let greeting = card.data.data.first_mes;
+					// Use cached character card if available, otherwise fetch it
+					let cardItem;
+					if (characterCard && characterCard.id === characterId) {
+						cardItem = characterCard;
+					} else {
+						cardItem = await getCharacterCard(characterId);
+						setCharacterCard(cardItem); // Cache the fetched card
+					}
+
+					let greeting = cardItem.data.data.first_mes;
 
 					if (greeting) {
 						// Process CBS macros in greeting
-						const charName = card.data.data.nickname || card.data.data.name;
+						const charName = cardItem.data.data.nickname || cardItem.data.data.name;
 						const processedGreeting = processCBSMacros(greeting, {
 							charName,
 							userName: userName || "User",
@@ -399,7 +419,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 			setMessages([]);
 			setHasMoreMessages(false); // No conversation, so no more messages to load
 		}
-	}, [sessionId]);
+	}, [sessionId, characterCard]);
 
 	/**
 	 * Clear all messages from the current conversation
@@ -417,6 +437,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		conversationId,
 		sessionId,
 		characterCardId,
+		characterCard, // Add character card to context
 		characterGreeting,
 		hasMoreMessages,
 		sendMessage,
