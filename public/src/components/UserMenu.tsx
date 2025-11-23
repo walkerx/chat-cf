@@ -4,6 +4,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../contexts/AuthContext.js';
 import { UsernameSetup } from './UsernameSetup.js';
 
@@ -103,13 +104,14 @@ export function UserMenu() {
                 )}
             </div>
 
-            {showUsernameEdit && (
+            {showUsernameEdit && createPortal(
                 <UsernameSetup
                     onSubmit={handleProfileSubmit}
                     onSkip={() => setShowUsernameEdit(false)}
                     initialUsername={username || ''}
                     initialAvatarUrl={avatarUrl || ''}
-                />
+                />,
+                document.body
             )}
             <style>{`
                 .user-avatar-img {

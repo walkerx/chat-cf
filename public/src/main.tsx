@@ -14,6 +14,7 @@ import "./styles/app.css";
 import "./styles/gallery.css";
 import "./styles/chat.css";
 import "./styles/auth.css";
+import "./styles/profile-setup.css";
 import "./styles/animations.css";
 
 const rootElement = document.getElementById("root");

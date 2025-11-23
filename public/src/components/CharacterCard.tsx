@@ -3,7 +3,7 @@
  * Individual character card with hover effects and history indicators
  */
 
-import { useState, memo, type KeyboardEvent, type ReactNode } from "react";
+import { useState, memo, useRef, useEffect, type KeyboardEvent, type ReactNode } from "react";
 import type { CharacterWithHistory } from "../pages/GalleryPage.js";
 
 export interface CharacterCardProps {
@@ -22,8 +22,23 @@ export const CharacterCard = memo(function CharacterCard({
 	searchQuery = "",
 }: CharacterCardProps) {
 	const [showMenu, setShowMenu] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
 	const { card, conversationCount, lastMessageAt } =
 		character;
+
+	// Close menu when clicking outside
+	useEffect(() => {
+		function handleClickOutside(event: MouseEvent) {
+			if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+				setShowMenu(false);
+			}
+		}
+
+		if (showMenu) {
+			document.addEventListener('mousedown', handleClickOutside);
+			return () => document.removeEventListener('mousedown', handleClickOutside);
+		}
+	}, [showMenu]);
 
 	const handleKeyDown = (e: KeyboardEvent) => {
 		if (e.key === "Enter" || e.key === " ") {
@@ -85,12 +100,13 @@ export const CharacterCard = memo(function CharacterCard({
 			)}
 
 			{(onEdit || onDelete) && (
-				<div className="card-actions" onClick={(e) => e.stopPropagation()}>
+				<div className="card-actions" onClick={(e) => e.stopPropagation()} ref={menuRef}>
 					<button
 						onClick={() => setShowMenu(!showMenu)}
 						aria-label="Character actions menu"
 						aria-expanded={showMenu}
 						aria-haspopup="true"
+						className="card-actions-button"
 					>
 						⋮
 					</button>
@@ -98,7 +114,10 @@ export const CharacterCard = memo(function CharacterCard({
 						<div className="card-menu" role="menu">
 							{onEdit && (
 								<button
-									onClick={() => onEdit(card.id)}
+									onClick={() => {
+										onEdit(card.id);
+										setShowMenu(false);
+									}}
 									role="menuitem"
 									aria-label={`Edit ${card.data.data.name}`}
 								>
@@ -107,7 +126,10 @@ export const CharacterCard = memo(function CharacterCard({
 							)}
 							{onDelete && (
 								<button
-									onClick={() => onDelete(card.id)}
+									onClick={() => {
+										onDelete(card.id);
+										setShowMenu(false);
+									}}
 									role="menuitem"
 									aria-label={`Delete ${card.data.data.name}`}
 								>

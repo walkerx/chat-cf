@@ -501,19 +501,24 @@
 	z-index: 10;
 }
 
-.card-actions button {
+.card-actions-button {
 	background: rgba(0, 0, 0, 0.5);
 	border: 1px solid transparent;
 	border-radius: var(--radius-sm);
-	font-size: 1.25rem;
+	font-size: 1.5rem;
 	cursor: pointer;
 	color: var(--text-muted);
-	padding: 0.25rem;
+	padding: 0.5rem 0.75rem;
+	min-width: 40px;
+	min-height: 40px;
 	transition: all 0.2s ease;
 	backdrop-filter: blur(4px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
-.card-actions button:hover {
+.card-actions-button:hover {
 	background: var(--surface-hover);
 	color: var(--text-primary);
 	border-color: var(--border-color);
