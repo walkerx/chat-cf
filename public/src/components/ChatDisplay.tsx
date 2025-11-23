@@ -122,7 +122,7 @@ export function ChatDisplay({
 						</button>
 					)}
 					<div className="messages">
-						{messages.map((message) => {
+						{messages.map((message, index) => {
 							const isTyping = message.role === 'assistant' && message.content === '' && isStreaming;
 							return (
 								<div
@@ -138,7 +138,7 @@ export function ChatDisplay({
 										<div className="message-role" aria-label={t('chat.messageSender')}>
 											{getSenderName(message.role)}
 										</div>
-										<div className="message-content">
+										<div className={`message-content ${isStreaming && index === messages.length - 1 && message.role === 'assistant' ? 'streaming' : ''}`}>
 											{isTyping ? (
 												<div className="typing-dots">
 													<span className="typing-dot"></span>

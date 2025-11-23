@@ -11,6 +11,8 @@ export interface ChatInputFormProps {
 	onCancel?: () => void;
 	isStreaming: boolean;
 	disabled?: boolean;
+	streamEnabled: boolean;
+	onToggleStream: (enabled: boolean) => void;
 }
 
 export function ChatInputForm({
@@ -18,6 +20,8 @@ export function ChatInputForm({
 	onCancel,
 	isStreaming,
 	disabled = false,
+	streamEnabled,
+	onToggleStream,
 }: ChatInputFormProps) {
 	const { t } = useTranslation();
 	const [input, setInput] = useState("");
@@ -64,14 +68,31 @@ export function ChatInputForm({
 					{t('common.cancel')}
 				</button>
 			) : (
-				<button
-					type="submit"
-					disabled={disabled || isStreaming || !input.trim()}
-					className="chat-button chat-button-submit"
-					aria-label={t('chat.send')}
-				>
-					{t('chat.send')}
-				</button>
+				<div className="chat-controls">
+					<div
+						className="toggle-container"
+						title={t('chat.toggleStreaming')}
+						onClick={() => {
+							if (!disabled && !isStreaming) {
+								onToggleStream(!streamEnabled);
+							}
+						}}
+						style={{ cursor: (disabled || isStreaming) ? 'not-allowed' : 'pointer' }}
+					>
+						<div className={`toggle-switch ${streamEnabled ? 'active' : ''}`}>
+							<div className="toggle-thumb"></div>
+						</div>
+						<span>{t('chat.stream')}</span>
+					</div>
+					<button
+						type="submit"
+						disabled={disabled || isStreaming || !input.trim()}
+						className="chat-button chat-button-submit"
+						aria-label={t('chat.send')}
+					>
+						{t('chat.send')}
+					</button>
+				</div>
 			)}
 		</form>
 	);

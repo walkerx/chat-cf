@@ -28,6 +28,8 @@ export function App() {
 		clearError,
 		setCharacterCardId,
 		startNewConversation,
+		streamEnabled,
+		setStreamEnabled,
 	} = useChat();
 
 	return (
@@ -64,6 +66,8 @@ export function App() {
 					onSubmit={sendMessage}
 					onCancel={abortStream}
 					isStreaming={isStreaming}
+					streamEnabled={streamEnabled}
+					onToggleStream={setStreamEnabled}
 				/>
 			</main>
 		</div>

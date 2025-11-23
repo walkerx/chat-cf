@@ -17,6 +17,7 @@ export interface ChatState {
 	sessionId: string;
 	characterCardId: string | null;
 	characterGreeting: string | null;
+	streamEnabled: boolean;
 }
 
 /**
@@ -55,6 +56,8 @@ export interface UseChatReturn {
 	startNewConversation: () => void;
 	loadCharacterConversation: (characterId: string) => Promise<void>;
 	clearMessages: () => void;
+	streamEnabled: boolean;
+	setStreamEnabled: (enabled: boolean) => void;
 }
 
 /**
@@ -67,6 +70,7 @@ export function useChat(): UseChatReturn {
 	const [conversationId, setConversationId] = useState<string | null>(null);
 	const [characterCardId, setCharacterCardId] = useState<string | null>(null);
 	const [characterGreeting, setCharacterGreeting] = useState<string | null>(null);
+	const [streamEnabled, setStreamEnabled] = useState<boolean>(true);
 	const [sessionId] = useState(() => getOrCreateSessionId());
 	const abortRef = useRef<(() => void) | null>(null);
 
@@ -76,14 +80,14 @@ export function useChat(): UseChatReturn {
 			try {
 				// Get the most recent conversation for this session
 				const conversations = await listConversations(sessionId);
-				
+
 				if (conversations.length > 0) {
 					const mostRecent = conversations[0];
 					const { messages: historyMessages } = await getConversation(
 						mostRecent.id,
 						sessionId
 					);
-					
+
 					setConversationId(mostRecent.id);
 					setMessages(historyMessages);
 				}
@@ -142,6 +146,7 @@ export function useChat(): UseChatReturn {
 						prompt,
 						conversationId: conversationId || undefined,
 						characterCardId: characterCardId || undefined,
+						stream: streamEnabled,
 					},
 					sessionId
 				);
@@ -218,7 +223,7 @@ export function useChat(): UseChatReturn {
 				abortRef.current = null;
 			}
 		},
-		[conversationId, characterCardId, sessionId]
+		[conversationId, characterCardId, sessionId, streamEnabled]
 	);
 
 	const abortStream = useCallback(() => {
@@ -250,15 +255,15 @@ export function useChat(): UseChatReturn {
 	const loadCharacterConversation = useCallback(async (characterId: string) => {
 		try {
 			setError(null);
-			
+
 			// Get the latest conversation for this character
 			const latestConversation = await getLatestCharacterConversation(characterId, sessionId);
-			
+
 			if (latestConversation) {
 				// Check cache first
 				const cached = conversationCache.get(latestConversation.id);
 				const now = Date.now();
-				
+
 				if (cached && (now - cached.timestamp) < CACHE_TTL) {
 					// Use cached data
 					setConversationId(cached.conversationId);
@@ -269,14 +274,14 @@ export function useChat(): UseChatReturn {
 						latestConversation.id,
 						sessionId
 					);
-					
+
 					// Update cache
 					conversationCache.set(latestConversation.id, {
 						messages: historyMessages,
 						conversationId: latestConversation.id,
 						timestamp: now,
 					});
-					
+
 					setConversationId(latestConversation.id);
 					setMessages(historyMessages);
 				}
@@ -318,6 +323,8 @@ export function useChat(): UseChatReturn {
 		startNewConversation,
 		loadCharacterConversation,
 		clearMessages,
+		streamEnabled,
+		setStreamEnabled,
 	};
 }
 

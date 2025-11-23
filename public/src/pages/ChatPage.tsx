@@ -193,6 +193,8 @@ export function ChatPage() {
 					onSubmit={handleSendMessage}
 					onCancel={chat.abortStream}
 					isStreaming={chat.isStreaming}
+					streamEnabled={chat.streamEnabled}
+					onToggleStream={chat.setStreamEnabled}
 				/>
 			</main>
 		</div>

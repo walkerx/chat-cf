@@ -18,6 +18,7 @@ export interface ChatState {
 	sessionId: string;
 	characterCardId: string | null;
 	characterGreeting: string | null;
+	streamEnabled: boolean;
 }
 
 export interface ChatContextValue {
@@ -28,6 +29,7 @@ export interface ChatContextValue {
 	sessionId: string;
 	characterCardId: string | null;
 	characterGreeting: string | null;
+	streamEnabled: boolean;
 	hasMoreMessages: boolean;
 	sendMessage: (prompt: string, userName?: string) => Promise<void>;
 	abortStream: () => void;
@@ -38,6 +40,7 @@ export interface ChatContextValue {
 	loadCharacterConversation: (characterId: string, userName?: string) => Promise<void>;
 	loadMoreMessages: () => Promise<void>;
 	clearMessages: () => void;
+	setStreamEnabled: (enabled: boolean) => void;
 }
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
@@ -48,6 +51,7 @@ interface StoredChatState {
 	messages: Message[];
 	conversationId: string | null;
 	characterCardId: string | null;
+	streamEnabled: boolean;
 }
 
 /**
@@ -89,6 +93,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 	const [error, setError] = useState<string | null>(null);
 	const [conversationId, setConversationId] = useState<string | null>(storedState.conversationId || null);
 	const [characterCardId, setCharacterCardId] = useState<string | null>(storedState.characterCardId || null);
+	const [streamEnabled, setStreamEnabled] = useState<boolean>(storedState.streamEnabled ?? true);
 	const [hasMoreMessages, setHasMoreMessages] = useState<boolean>(false);
 	const [characterGreeting, setCharacterGreeting] = useState<string | null>(null);
 	const abortRef = useRef<(() => void) | null>(null);
@@ -114,8 +119,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 			messages,
 			conversationId,
 			characterCardId,
+			streamEnabled,
 		});
-	}, [messages, conversationId, characterCardId]);
+	}, [messages, conversationId, characterCardId, streamEnabled]);
 
 	// Load character greeting when character card is selected
 	useEffect(() => {
@@ -187,6 +193,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 						conversationId: conversationId || undefined,
 						characterCardId: characterCardId || undefined,
 						userName: userName || undefined,
+						stream: streamEnabled,
 					},
 					sessionId
 				);
@@ -278,7 +285,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 				abortRef.current = null;
 			}
 		},
-		[conversationId, characterCardId, sessionId]
+		[conversationId, characterCardId, sessionId, streamEnabled]
 	);
 
 	const abortStream = useCallback(() => {
@@ -421,6 +428,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		loadCharacterConversation,
 		loadMoreMessages,
 		clearMessages,
+		streamEnabled,
+		setStreamEnabled,
 	};
 
 	return <ChatContext.Provider value={contextValue}>{children}</ChatContext.Provider>;

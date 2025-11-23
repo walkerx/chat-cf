@@ -27,7 +27,9 @@
     "messageSender": "Message sender",
     "messageTime": "Message time",
     "aiTyping": "AI is typing",
-    "assistant": "assistant"
+    "assistant": "assistant",
+    "stream": "Stream",
+    "toggleStreaming": "Toggle Streaming"
   },
   "character": {
     "selectCharacter": "Select Character",

@@ -25,7 +25,7 @@ export async function handleChatStream(
 	const sessionId = c.req.header("X-Session-ID") || getOrGenerateSessionId(null);
 
 	// Parse request body
-	let body: { prompt?: string; conversationId?: string; characterCardId?: string; userName?: string };
+	let body: { prompt?: string; conversationId?: string; characterCardId?: string; userName?: string; stream?: boolean };
 	try {
 		body = await c.req.json();
 	} catch (error) {
@@ -279,46 +279,70 @@ export async function handleChatStream(
 				// Create abort controller for cancellation support
 				const abortController = new AbortController();
 
-				// Stream from OpenRouter
-				let chunkIndex = 0;
-				for await (const chunk of openRouter.streamChatCompletion(
-					{
-						model: aiModel,
-						messages: messageHistory,
-						max_tokens: 5000,
-					},
-					abortController.signal
-				)) {
-					// Track first chunk latency
-					if (!firstChunkReceived) {
-						const latency = Date.now() - startTime;
-						console.log(
-							JSON.stringify({
-								type: "first_chunk_latency",
-								latency_ms: latency,
-								sessionId,
-								conversationId,
-							})
-						);
-						firstChunkReceived = true;
-					}
+				if (body.stream === false) {
+					// Non-streaming mode
+					const responseText = await openRouter.chatCompletion(
+						{
+							model: aiModel,
+							messages: messageHistory,
+							max_tokens: 5000,
+						},
+						abortController.signal
+					);
 
-					// Accumulate full response
-					if (chunk.type === "content") {
-						fullResponse += chunk.text;
-					}
+					fullResponse = responseText;
 
-					// Send chunk to client
-					// Include conversationId in first chunk only for efficiency
+					// Send single chunk
 					const chunkData = `data: ${JSON.stringify({
-						index: chunkIndex,
-						text: chunk.text,
-						type: chunk.type,
-						timestamp: chunk.timestamp,
-						...(chunkIndex === 0 ? { conversationId } : {}),
+						index: 0,
+						text: responseText,
+						type: "content",
+						timestamp: Date.now(),
+						conversationId,
 					})}\n\n`;
 					controller.enqueue(encoder.encode(chunkData));
-					chunkIndex++;
+				} else {
+					// Stream from OpenRouter
+					let chunkIndex = 0;
+					for await (const chunk of openRouter.streamChatCompletion(
+						{
+							model: aiModel,
+							messages: messageHistory,
+							max_tokens: 5000,
+						},
+						abortController.signal
+					)) {
+						// Track first chunk latency
+						if (!firstChunkReceived) {
+							const latency = Date.now() - startTime;
+							console.log(
+								JSON.stringify({
+									type: "first_chunk_latency",
+									latency_ms: latency,
+									sessionId,
+									conversationId,
+								})
+							);
+							firstChunkReceived = true;
+						}
+
+						// Accumulate full response
+						if (chunk.type === "content") {
+							fullResponse += chunk.text;
+						}
+
+						// Send chunk to client
+						// Include conversationId in first chunk only for efficiency
+						const chunkData = `data: ${JSON.stringify({
+							index: chunkIndex,
+							text: chunk.text,
+							type: chunk.type,
+							timestamp: chunk.timestamp,
+							...(chunkIndex === 0 ? { conversationId } : {}),
+						})}\n\n`;
+						controller.enqueue(encoder.encode(chunkData));
+						chunkIndex++;
+					}
 				}
 
 				// Save assistant message after streaming completes

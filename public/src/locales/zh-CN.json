@@ -27,7 +27,9 @@
     "messageSender": "发送者",
     "messageTime": "消息时间",
     "aiTyping": "AI 正在输入中",
-    "assistant": "助手"
+    "assistant": "助手",
+    "stream": "流式输出",
+    "toggleStreaming": "切换流式输出"
   },
   "character": {
     "selectCharacter": "选择角色",
