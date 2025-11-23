@@ -80,4 +80,9 @@ app.get("/api/character-cards/:id", handleGetCharacterCard);
 app.put("/api/character-cards/:id", handleUpdateCharacterCard);
 app.delete("/api/character-cards/:id", handleDeleteCharacterCard);
 
+// Upload routes
+import { handleUpload, handleGetAvatar } from "./handlers/upload.js";
+app.post("/api/upload", handleUpload);
+app.get("/api/avatars/:key", handleGetAvatar);
+
 export default app;

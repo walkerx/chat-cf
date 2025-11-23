@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext.js';
 import { UsernameSetup } from './UsernameSetup.js';
 
 export function UserMenu() {
-    const { user, username, signOut, updateUsername } = useAuth();
+    const { user, username, avatarUrl, signOut, updateUsername, updateAvatar } = useAuth();
     const [showMenu, setShowMenu] = useState(false);
     const [showUsernameEdit, setShowUsernameEdit] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -33,8 +33,11 @@ export function UserMenu() {
 
     const displayName = username || user.email?.split('@')[0] || 'User';
 
-    const handleUsernameSubmit = async (newUsername: string) => {
+    const handleProfileSubmit = async (newUsername: string, newAvatarUrl?: string) => {
         await updateUsername(newUsername);
+        if (newAvatarUrl) {
+            await updateAvatar(newAvatarUrl);
+        }
         setShowUsernameEdit(false);
         setShowMenu(false);
     };
@@ -54,7 +57,11 @@ export function UserMenu() {
                     aria-expanded={showMenu}
                     aria-haspopup="true"
                 >
-                    <span className="user-avatar">{displayName[0].toUpperCase()}</span>
+                    {avatarUrl ? (
+                        <img src={avatarUrl} alt={displayName} className="user-avatar-img" />
+                    ) : (
+                        <span className="user-avatar">{displayName[0].toUpperCase()}</span>
+                    )}
                     <span className="user-name">{displayName}</span>
                     <span className="user-menu-arrow">▼</span>
                 </button>
@@ -79,7 +86,7 @@ export function UserMenu() {
                             role="menuitem"
                         >
                             <span className="user-menu-icon">✏️</span>
-                            {username ? 'Edit Username' : 'Set Username'}
+                            Edit Profile
                         </button>
 
                         <div className="user-menu-divider" />
@@ -98,11 +105,20 @@ export function UserMenu() {
 
             {showUsernameEdit && (
                 <UsernameSetup
-                    onSubmit={handleUsernameSubmit}
+                    onSubmit={handleProfileSubmit}
                     onSkip={() => setShowUsernameEdit(false)}
                     initialUsername={username || ''}
+                    initialAvatarUrl={avatarUrl || ''}
                 />
             )}
+            <style>{`
+                .user-avatar-img {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+            `}</style>
         </>
     );
 }

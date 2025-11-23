@@ -13,6 +13,7 @@ import { useAuth } from "../contexts/AuthContext.js";
 import { GalleryGrid } from "../components/GalleryGrid.js";
 import { GalleryHeader } from "../components/GalleryHeader.js";
 import { UploadModal } from "../components/UploadModal.js";
+import { EditCharacterModal } from "../components/EditCharacterModal.js";
 import { ConfirmDialog } from "../components/ConfirmDialog.js";
 import { AuthPrompt } from "../components/AuthPrompt.js";
 import { useDebounce } from "../hooks/useDebounce.js";
@@ -38,6 +39,7 @@ export function GalleryPage() {
 		hasConversations: boolean;
 		conversationCount: number;
 	} | null>(null);
+	const [editingCharacter, setEditingCharacter] = useState<CharacterCardListItem | null>(null);
 	const sessionId = getOrCreateSessionId();
 	const navigate = useNavigate();
 	const { user, signOut } = useAuth();
@@ -230,9 +232,21 @@ export function GalleryPage() {
 	}, []);
 
 	const handleEditCharacter = useCallback((characterId: string) => {
-		// Edit functionality - placeholder for future implementation
-		console.log("Edit character:", characterId);
-		console.log("Edit character:", characterId);
+		const character = characters.find((ch) => ch.card.id === characterId);
+		if (character) {
+			setEditingCharacter(character.card);
+		}
+	}, [characters]);
+
+	const handleUpdateSuccess = useCallback((updatedCard: CharacterCardListItem) => {
+		setCharacters((prev) =>
+			prev.map((ch) =>
+				ch.card.id === updatedCard.id
+					? { ...ch, card: updatedCard }
+					: ch
+			)
+		);
+		setEditingCharacter(null);
 	}, []);
 
 	const handleAuthAction = useCallback(async () => {
@@ -317,6 +331,14 @@ export function GalleryPage() {
 					onConfirm={confirmDelete}
 					onCancel={cancelDelete}
 					isDestructive={true}
+				/>
+			)}
+
+			{editingCharacter && (
+				<EditCharacterModal
+					character={editingCharacter}
+					onClose={() => setEditingCharacter(null)}
+					onUpdateSuccess={handleUpdateSuccess}
 				/>
 			)}
 

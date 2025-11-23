@@ -14,12 +14,20 @@
 	"observability": {
 		"enabled": true
 	},
-	"d1_databases": [{
-		"binding": "DB",
-		"database_name": "chat",
-		"database_id": "33fbe4e9-e052-45a1-b1ac-fe499b043a57",
-		"migrations_dir": "src/db/migrations"
- 	}],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "chat",
+			"database_id": "33fbe4e9-e052-45a1-b1ac-fe499b043a57",
+			"migrations_dir": "src/db/migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "AVATAR_BUCKET",
+			"bucket_name": "chat-cf-avatars"
+		}
+	],
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -35,9 +43,9 @@
 	 * Environment Variables
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 	 */
-	"vars": { 
-	  "AI_MODEL": "deepseek/deepseek-v3.2-exp",
-	  "VITE_SUPABASE_URL": "https://jqgjvuzqlodkrqkimcfd.supabase.co"
+	"vars": {
+		"AI_MODEL": "deepseek/deepseek-v3.2-exp",
+		"VITE_SUPABASE_URL": "https://jqgjvuzqlodkrqkimcfd.supabase.co"
 	}
 	/**
 	 * Note: Use secrets to store sensitive data like OPENROUTER_API_KEY.

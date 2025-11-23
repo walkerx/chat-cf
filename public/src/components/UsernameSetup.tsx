@@ -4,15 +4,18 @@
  */
 
 import { useState, type FormEvent } from 'react';
+import { AvatarUpload } from './AvatarUpload.js';
 
 export interface UsernameSetupProps {
-    onSubmit: (username: string) => Promise<void>;
+    onSubmit: (username: string, avatarUrl?: string) => Promise<void>;
     onSkip?: () => void;
     initialUsername?: string;
+    initialAvatarUrl?: string;
 }
 
-export function UsernameSetup({ onSubmit, onSkip, initialUsername = '' }: UsernameSetupProps) {
+export function UsernameSetup({ onSubmit, onSkip, initialUsername = '', initialAvatarUrl = '' }: UsernameSetupProps) {
     const [username, setUsername] = useState(initialUsername);
+    const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -41,12 +44,12 @@ export function UsernameSetup({ onSubmit, onSkip, initialUsername = '' }: Userna
         setError(null);
 
         try {
-            await onSubmit(trimmedUsername);
+            await onSubmit(trimmedUsername, avatarUrl);
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
             } else {
-                setError('Failed to save username');
+                setError('Failed to save profile');
             }
         } finally {
             setLoading(false);
@@ -57,11 +60,19 @@ export function UsernameSetup({ onSubmit, onSkip, initialUsername = '' }: Userna
         <div className="username-setup-overlay">
             <div className="username-setup-modal">
                 <div className="username-setup-header">
-                    <h2>Set Your Username</h2>
-                    <p>This name will be used when chatting with characters</p>
+                    <h2>Set Your Profile</h2>
+                    <p>Customize how you appear in chats</p>
                 </div>
 
                 <form className="username-setup-form" onSubmit={handleSubmit}>
+                    <div className="username-input-group" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                        <AvatarUpload
+                            currentAvatarUrl={avatarUrl}
+                            onUpload={setAvatarUrl}
+                            size={100}
+                        />
+                    </div>
+
                     <div className="username-input-group">
                         <label htmlFor="username" className="username-label">
                             Username
@@ -92,7 +103,7 @@ export function UsernameSetup({ onSubmit, onSkip, initialUsername = '' }: Userna
                             disabled={loading}
                             className="username-submit"
                         >
-                            {loading ? 'Saving...' : 'Save Username'}
+                            {loading ? 'Saving...' : 'Save Profile'}
                         </button>
                         {onSkip && (
                             <button

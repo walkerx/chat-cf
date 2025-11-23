@@ -42,10 +42,21 @@ export const CharacterCard = memo(function CharacterCard({
 			aria-label={`Chat with ${card.data.data.name}. ${card.data.data.description}`}
 		>
 			<div className="card-image">
-				<div className="card-avatar" aria-hidden="true">
-					{card.data.data.name[0].toUpperCase()}
-				</div>
+				{card.data.data.avatar ? (
+					<img src={card.data.data.avatar} alt={card.data.data.name} className="card-avatar-img" />
+				) : (
+					<div className="card-avatar" aria-hidden="true">
+						{card.data.data.name[0].toUpperCase()}
+					</div>
+				)}
 			</div>
+			<style>{`
+				.card-avatar-img {
+					width: 100%;
+					height: 100%;
+					object-fit: cover;
+				}
+			`}</style>
 
 			<div className="card-content">
 				<h3 className="card-name">

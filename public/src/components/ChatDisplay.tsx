@@ -19,6 +19,7 @@ export interface ChatDisplayProps {
 	characterName?: string | null;
 	userName?: string | null;
 	characterCard?: CharacterCardV3 | null;
+	userAvatarUrl?: string | null;
 }
 
 export function ChatDisplay({
@@ -28,7 +29,8 @@ export function ChatDisplay({
 	loadMoreMessages = () => { },
 	characterName,
 	userName,
-	characterCard
+	characterCard,
+	userAvatarUrl
 }: ChatDisplayProps) {
 	const { t } = useTranslation();
 	const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -61,6 +63,22 @@ export function ChatDisplay({
 			return characterName || t('chat.assistant');
 		}
 		return role;
+	};
+
+	const getAvatar = (role: string) => {
+		if (role === 'user') {
+			if (userAvatarUrl) {
+				return <img src={userAvatarUrl} alt="User" className="message-avatar-img" />;
+			}
+			return <div className="message-avatar-placeholder">{(userName || 'U')[0].toUpperCase()}</div>;
+		}
+		if (role === 'assistant') {
+			if (characterCard?.data?.avatar) {
+				return <img src={characterCard.data.avatar} alt="Character" className="message-avatar-img" />;
+			}
+			return <div className="message-avatar-placeholder">{(characterName || 'C')[0].toUpperCase()}</div>;
+		}
+		return null;
 	};
 
 	// Process message content with regex scripts
@@ -113,22 +131,27 @@ export function ChatDisplay({
 									role="article"
 									aria-label={`${getSenderName(message.role)} ${t('chat.message')}`}
 								>
-									<div className="message-role" aria-label={t('chat.messageSender')}>
-										{getSenderName(message.role)}
+									<div className="message-avatar">
+										{getAvatar(message.role)}
 									</div>
-									<div className="message-content">
-										{isTyping ? (
-											<div className="typing-dots">
-												<span className="typing-dot"></span>
-												<span className="typing-dot"></span>
-												<span className="typing-dot"></span>
-											</div>
-										) : (
-											<div dangerouslySetInnerHTML={{ __html: processMessageContent(message) }} />
-										)}
-									</div>
-									<div className="message-timestamp" aria-label={t('chat.messageTime')}>
-										{new Date(message.created_at).toLocaleTimeString()}
+									<div className="message-body">
+										<div className="message-role" aria-label={t('chat.messageSender')}>
+											{getSenderName(message.role)}
+										</div>
+										<div className="message-content">
+											{isTyping ? (
+												<div className="typing-dots">
+													<span className="typing-dot"></span>
+													<span className="typing-dot"></span>
+													<span className="typing-dot"></span>
+												</div>
+											) : (
+												<div dangerouslySetInnerHTML={{ __html: processMessageContent(message) }} />
+											)}
+										</div>
+										<div className="message-timestamp" aria-label={t('chat.messageTime')}>
+											{new Date(message.created_at).toLocaleTimeString()}
+										</div>
 									</div>
 								</div>
 							);
@@ -138,6 +161,45 @@ export function ChatDisplay({
 					</div>
 				</>
 			)}
+			<style>{`
+				.message {
+					display: flex;
+					gap: 1rem;
+					align-items: flex-start;
+				}
+				.message-avatar {
+					flex-shrink: 0;
+					width: 40px;
+					height: 40px;
+					border-radius: 50%;
+					overflow: hidden;
+				}
+				.message-avatar-img {
+					width: 100%;
+					height: 100%;
+					object-fit: cover;
+				}
+				.message-avatar-placeholder {
+					width: 100%;
+					height: 100%;
+					background: var(--surface-hover);
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-weight: bold;
+					color: var(--text-secondary);
+				}
+				.message-body {
+					flex: 1;
+					min-width: 0;
+				}
+				.message-role {
+					margin-bottom: 0.25rem;
+					font-weight: 500;
+					font-size: 0.9rem;
+					color: var(--text-secondary);
+				}
+			`}</style>
 		</div>
 	);
 }

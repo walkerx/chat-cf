@@ -258,6 +258,9 @@ export async function getLatestCharacterConversation(
 /**
  * Delete a character card
  */
+/**
+ * Delete a character card
+ */
 export async function deleteCharacterCard(id: string): Promise<void> {
 	const response = await fetch(`${API_BASE}/api/character-cards/${id}`, {
 		method: "DELETE",
@@ -266,5 +269,46 @@ export async function deleteCharacterCard(id: string): Promise<void> {
 	if (!response.ok) {
 		throw new Error(`API error: ${response.status} ${response.statusText}`);
 	}
+}
+
+/**
+ * Upload an image
+ */
+export async function uploadImage(file: File): Promise<{ url: string; key: string }> {
+	const formData = new FormData();
+	formData.append("file", file);
+
+	const response = await fetch(`${API_BASE}/api/upload`, {
+		method: "POST",
+		body: formData,
+	});
+
+	if (!response.ok) {
+		throw new Error(`API error: ${response.status} ${response.statusText}`);
+	}
+
+	return await response.json();
+}
+
+/**
+ * Update a character card
+ */
+export async function updateCharacterCard(
+	id: string,
+	card: CharacterCardV3
+): Promise<CharacterCardListItem> {
+	const response = await fetch(`${API_BASE}/api/character-cards/${id}`, {
+		method: "PUT",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(card),
+	});
+
+	if (!response.ok) {
+		throw new Error(`API error: ${response.status} ${response.statusText}`);
+	}
+
+	return await response.json();
 }
 

@@ -187,6 +187,7 @@ export function ChatPage() {
 					characterName={characterName}
 					userName={username}
 					characterCard={characterCard?.data}
+					userAvatarUrl={user?.user_metadata?.avatar_url}
 				/>
 				<ChatInputForm
 					onSubmit={handleSendMessage}
