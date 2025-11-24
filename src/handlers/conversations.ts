@@ -34,6 +34,35 @@ export async function handleListConversations(
 }
 
 /**
+ * GET /api/conversations/active/:characterCardId
+ * Get the most recent conversation for a character and session
+ */
+export async function handleGetActiveCharacterConversation(
+	c: Context<{ Bindings: CloudflareBindings }>
+): Promise<Response> {
+	const characterCardId = c.req.param("characterCardId");
+	const sessionId = c.req.query("sessionId") || c.req.header("X-Session-ID");
+
+	if (!characterCardId) {
+		return c.json(createStandardErrorResponse("INVALID_REQUEST"), 400);
+	}
+
+	if (!sessionId) {
+		return c.json(createStandardErrorResponse("UNAUTHORIZED"), 401);
+	}
+
+	const db = new DatabaseClient(c.env.DB);
+
+	try {
+		const conversation = await db.getActiveCharacterConversation(sessionId, characterCardId);
+		return c.json({ conversation });
+	} catch (error) {
+		console.error("Error getting active character conversation:", error);
+		return c.json(createStandardErrorResponse("INTERNAL_ERROR"), 500);
+	}
+}
+
+/**
  * GET /api/conversations/{conversationId}
  * Load conversation with full message history
  */

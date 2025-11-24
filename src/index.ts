@@ -60,7 +60,7 @@ app.onError((err, c) => {
 
 // API routes
 import { handleChatStream } from "./handlers/chat-stream.js";
-import { handleListConversations, handleGetConversation } from "./handlers/conversations.js";
+import { handleListConversations, handleGetConversation, handleGetActiveCharacterConversation } from "./handlers/conversations.js";
 import {
 	handleCreateCharacterCard,
 	handleListCharacterCards,
@@ -72,6 +72,7 @@ import {
 app.post("/api/chat/stream", handleChatStream);
 app.get("/api/conversations", handleListConversations);
 app.get("/api/conversations/:conversationId", handleGetConversation);
+app.get("/api/conversations/active/:characterCardId", handleGetActiveCharacterConversation);
 
 // Character card routes
 app.post("/api/character-cards", handleCreateCharacterCard);

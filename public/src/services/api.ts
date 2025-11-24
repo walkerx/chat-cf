@@ -252,8 +252,24 @@ export async function getLatestCharacterConversation(
 	characterId: string,
 	sessionId?: string
 ): Promise<Conversation | null> {
-	const conversations = await getCharacterConversations(characterId, sessionId);
-	return conversations.length > 0 ? conversations[0] : null;
+	const sid = sessionId || getOrCreateSessionId();
+
+	const response = await fetch(`${API_BASE}/api/conversations/active/${characterId}?sessionId=${sid}`, {
+		method: "GET",
+		headers: {
+			"X-Session-ID": sid,
+		},
+	});
+
+	if (!response.ok) {
+		// Fallback to old method if new endpoint fails
+		console.error(`Failed to get active conversation: ${response.status} ${response.statusText}`);
+		const conversations = await getCharacterConversations(characterId, sessionId);
+		return conversations.length > 0 ? conversations[0] : null;
+	}
+
+	const data = await response.json();
+	return data.conversation;
 }
 
 /**
