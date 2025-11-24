@@ -36,7 +36,7 @@
 }
 
 .gallery-header h1::after {
-	content: 'DATABASE';
+	content: 'beta';
 	font-size: 0.75rem;
 	padding: 0.25rem 0.5rem;
 	background-color: rgba(0, 243, 255, 0.1);
