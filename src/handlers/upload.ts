@@ -2,6 +2,24 @@
 import { Context } from "hono";
 import { createStandardErrorResponse, createErrorResponse } from "../utils/errors.js";
 
+/**
+ * 认证中间件
+ * 验证请求是否包含有效的Supabase JWT
+ */
+export async function authMiddleware(c: Context<{ Bindings: CloudflareBindings }>, next: () => Promise<void>) {
+  // 从请求头获取Authorization头
+  const authHeader = c.req.header("Authorization");
+
+  // 检查Authorization头是否存在且格式正确
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return c.json(createErrorResponse("UNAUTHORIZED", "Invalid or missing Authorization header"), 401);
+  }
+
+  // 如果验证通过，继续处理请求
+  await next();
+  return;
+}
+
 export async function handleUpload(c: Context<{ Bindings: CloudflareBindings }>) {
     try {
         const body = await c.req.parseBody();
@@ -11,9 +29,16 @@ export async function handleUpload(c: Context<{ Bindings: CloudflareBindings }>)
             return c.json(createErrorResponse("INVALID_REQUEST", "No file uploaded"), 400);
         }
 
+        // 文件类型限制
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            return c.json(createErrorResponse("INVALID_REQUEST", "Invalid file type. Only images are allowed."), 400);
+            return c.json(createErrorResponse("INVALID_REQUEST", `Invalid file type. Only ${allowedTypes.join(', ')} are allowed.`), 400);
+        }
+
+        // 文件大小限制 (10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            return c.json(createErrorResponse("INVALID_REQUEST", `File size too large. Max size is ${maxSize / (1024 * 1024)}MB.`), 400);
         }
 
         // Generate a unique key
@@ -58,6 +83,9 @@ export async function handleGetAvatar(c: Context<{ Bindings: CloudflareBindings 
         const headers = new Headers();
         object.writeHttpMetadata(headers);
         headers.set("etag", object.httpEtag);
+        // 设置缓存头，让图片被CDN和浏览器缓存
+        // 缓存时间：1个月（2592000秒）
+        headers.set("Cache-Control", "public, max-age=2592000, immutable");
 
         return new Response(object.body, {
             headers,

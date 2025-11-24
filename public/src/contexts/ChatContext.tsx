@@ -20,6 +20,7 @@ export interface ChatState {
 	characterCard: CharacterCardListItem | null; // Add character card cache
 	characterGreeting: string | null;
 	streamEnabled: boolean;
+	isCharacterCardIdJustChanged: boolean; // Flag to prevent redundant fetch
 }
 
 export interface ChatContextValue {
@@ -94,11 +95,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [conversationId, setConversationId] = useState<string | null>(storedState.conversationId || null);
-	const [characterCardId, setCharacterCardId] = useState<string | null>(storedState.characterCardId || null);
+	const [characterCardIdState, setCharacterCardIdState] = useState<string | null>(storedState.characterCardId || null);
 	const [streamEnabled, setStreamEnabled] = useState<boolean>(storedState.streamEnabled ?? true);
 	const [hasMoreMessages, setHasMoreMessages] = useState<boolean>(false);
 	const [characterGreeting, setCharacterGreeting] = useState<string | null>(null);
 	const [characterCard, setCharacterCard] = useState<CharacterCardListItem | null>(null); // Add character card cache
+	const [isCharacterCardIdJustChanged, setIsCharacterCardIdJustChanged] = useState(false);
 	const abortRef = useRef<(() => void) | null>(null);
 
 	// Load more messages (fetch full conversation)
@@ -116,29 +118,44 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		}
 	}, [conversationId, sessionId]);
 
+	// Custom setCharacterCardId that sets the flag to prevent redundant fetch
+	const setCharacterCardId = useCallback((id: string | null) => {
+		setCharacterCardIdState(id);
+		setIsCharacterCardIdJustChanged(true);
+	}, []);
+
 	// Save state to storage whenever it changes
 	useEffect(() => {
 		saveStateToStorage({
 			messages,
 			conversationId,
-			characterCardId,
+			characterCardId: characterCardIdState,
 			streamEnabled,
 		});
-	}, [messages, conversationId, characterCardId, streamEnabled]);
+	}, [messages, conversationId, characterCardIdState, streamEnabled]);
 
 	// Load character greeting when character card is selected
 	useEffect(() => {
 		async function loadCharacterGreeting() {
-			if (!characterCardId) {
-				setCharacterGreeting(null);
-				setCharacterCard(null); // Clear card cache when character changes
+			if (!characterCardIdState || isCharacterCardIdJustChanged) {
+				if (!characterCardIdState) {
+					setCharacterGreeting(null);
+					setCharacterCard(null); // Clear card cache when character changes
+				}
 				return;
 			}
 
 			try {
-				const cardItem = await getCharacterCard(characterCardId);
+				// Use cached character card if available, otherwise fetch it
+				let cardItem;
+				if (characterCard && characterCard.id === characterCardIdState) {
+					cardItem = characterCard;
+				} else {
+					cardItem = await getCharacterCard(characterCardIdState);
+					setCharacterCard(cardItem); // Cache the fetched card
+				}
+
 				const greeting = cardItem.data.data.first_mes;
-				setCharacterCard(cardItem); // Cache the full character card item
 				setCharacterGreeting(greeting);
 
 				// If this is a new conversation (no messages yet), add greeting as first message
@@ -166,7 +183,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		}
 
 		loadCharacterGreeting();
-	}, [characterCardId]);
+	}, [characterCardIdState, isCharacterCardIdJustChanged]);
 
 	const sendMessage = useCallback(
 		async (prompt: string, userName?: string) => {
@@ -203,7 +220,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 					{
 						prompt,
 						conversationId: conversationId || undefined,
-						characterCardId: characterCardId || undefined,
+						characterCardId: characterCardIdState || undefined,
 						userName: userName || undefined,
 						stream: streamEnabled,
 					},
@@ -297,7 +314,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 				abortRef.current = null;
 			}
 		},
-		[conversationId, characterCardId, sessionId, streamEnabled]
+		[conversationId, characterCardIdState, sessionId, streamEnabled]
 	);
 
 	const abortStream = useCallback(() => {
@@ -418,6 +435,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 			setConversationId(null);
 			setMessages([]);
 			setHasMoreMessages(false); // No conversation, so no more messages to load
+		} finally {
+			// Clear the flag to allow normal useEffect behavior for future changes
+			setIsCharacterCardIdJustChanged(false);
 		}
 	}, [sessionId, characterCard]);
 
@@ -436,7 +456,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 		error,
 		conversationId,
 		sessionId,
-		characterCardId,
+		characterCardId: characterCardIdState,
 		characterCard, // Add character card to context
 		characterGreeting,
 		hasMoreMessages,

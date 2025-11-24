@@ -12,7 +12,6 @@ import { ChatInputForm } from "../components/ChatInputForm.js";
 import { ErrorDisplay } from "../components/ErrorDisplay.js";
 import { ChatHeader } from "../components/ChatHeader.js";
 import {
-	getCharacterCard,
 	type CharacterCardListItem,
 } from "../services/api.js";
 

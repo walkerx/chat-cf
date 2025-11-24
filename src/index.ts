@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { loggerMiddleware } from "./middleware/logger.js";
 import { rateLimiterMiddleware } from "./middleware/rate-limiter.js";
+import { supabaseAuthMiddleware } from "./middleware/auth.js";
 import { getOrGenerateSessionId } from "./utils/session.js";
 import { createStandardErrorResponse } from "./utils/errors.js";
 
@@ -69,21 +70,24 @@ import {
 	handleDeleteCharacterCard,
 } from "./handlers/character-cards.js";
 
-app.post("/api/chat/stream", handleChatStream);
-app.get("/api/conversations", handleListConversations);
-app.get("/api/conversations/:conversationId", handleGetConversation);
-app.get("/api/conversations/active/:characterCardId", handleGetActiveCharacterConversation);
+// All chat endpoints require authentication
+app.post("/api/chat/stream", supabaseAuthMiddleware, handleChatStream);
+
+// All conversation endpoints require authentication
+app.get("/api/conversations", supabaseAuthMiddleware, handleListConversations);
+app.get("/api/conversations/:conversationId", supabaseAuthMiddleware, handleGetConversation);
+app.get("/api/conversations/active/:characterCardId", supabaseAuthMiddleware, handleGetActiveCharacterConversation);
 
 // Character card routes
-app.post("/api/character-cards", handleCreateCharacterCard);
-app.get("/api/character-cards", handleListCharacterCards);
-app.get("/api/character-cards/:id", handleGetCharacterCard);
-app.put("/api/character-cards/:id", handleUpdateCharacterCard);
-app.delete("/api/character-cards/:id", handleDeleteCharacterCard);
+app.post("/api/character-cards", supabaseAuthMiddleware, handleCreateCharacterCard); // Require auth
+app.get("/api/character-cards", handleListCharacterCards); // Public access for homepage
+app.get("/api/character-cards/:id", handleGetCharacterCard); // Public access for homepage
+app.put("/api/character-cards/:id", supabaseAuthMiddleware, handleUpdateCharacterCard); // Require auth
+app.delete("/api/character-cards/:id", supabaseAuthMiddleware, handleDeleteCharacterCard); // Require auth
 
 // Upload routes
 import { handleUpload, handleGetAvatar } from "./handlers/upload.js";
-app.post("/api/upload", handleUpload);
-app.get("/api/avatars/:key", handleGetAvatar);
+app.post("/api/upload", supabaseAuthMiddleware, handleUpload); // 上传接口使用通用认证中间件
+app.get("/api/avatars/:key", handleGetAvatar); // 获取头像接口通常无需认证，保持公开访问
 
 export default app;

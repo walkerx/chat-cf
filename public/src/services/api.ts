@@ -7,6 +7,7 @@ import type { StreamChunk } from "../../../src/models/stream-chunk.js";
 import type { Conversation } from "../../../src/models/conversation.js";
 import type { Message } from "../../../src/models/message.js";
 import { getOrCreateSessionId } from "./session.js";
+import { supabase } from '../lib/supabase';
 
 const API_BASE = ""; // Relative to current origin
 
@@ -33,12 +34,23 @@ export async function streamChat(
 	const sid = sessionId || getOrCreateSessionId();
 	const abortController = new AbortController();
 
+	// Get Supabase session for JWT
+	const { data: { session } } = await supabase.auth.getSession();
+
+	// Create headers
+	const headers: HeadersInit = {
+		"Content-Type": "application/json",
+		"X-Session-ID": sid,
+	};
+
+	// Add JWT if available
+	if (session?.access_token) {
+		headers['Authorization'] = `Bearer ${session.access_token}`;
+	}
+
 	const response = await fetch(`${API_BASE}/api/chat/stream`, {
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			"X-Session-ID": sid,
-		},
+		headers,
 		body: JSON.stringify(request),
 		signal: abortController.signal,
 	});
@@ -101,11 +113,22 @@ export async function listConversations(
 ): Promise<Conversation[]> {
 	const sid = sessionId || getOrCreateSessionId();
 
+	// Get Supabase session for JWT
+	const { data: { session } } = await supabase.auth.getSession();
+
+	// Create headers
+	const headers: HeadersInit = {
+		"X-Session-ID": sid,
+	};
+
+	// Add JWT if available
+	if (session?.access_token) {
+		headers['Authorization'] = `Bearer ${session.access_token}`;
+	}
+
 	const response = await fetch(`${API_BASE}/api/conversations?sessionId=${sid}`, {
 		method: "GET",
-		headers: {
-			"X-Session-ID": sid,
-		},
+		headers,
 	});
 
 	if (!response.ok) {
@@ -125,13 +148,24 @@ export async function getConversation(
 ): Promise<{ conversation: Conversation; messages: Message[] }> {
 	const sid = sessionId || getOrCreateSessionId();
 
+	// Get Supabase session for JWT
+	const { data: { session } } = await supabase.auth.getSession();
+
+	// Create headers
+	const headers: HeadersInit = {
+		"X-Session-ID": sid,
+	};
+
+	// Add JWT if available
+	if (session?.access_token) {
+		headers['Authorization'] = `Bearer ${session.access_token}`;
+	}
+
 	const response = await fetch(
 		`${API_BASE}/api/conversations/${conversationId}`,
 		{
 			method: "GET",
-			headers: {
-				"X-Session-ID": sid,
-			},
+			headers,
 		}
 	);
 
@@ -217,11 +251,22 @@ export async function getCharacterCard(
 export async function createCharacterCard(
 	card: CharacterCardV3
 ): Promise<CharacterCardListItem> {
+	// Get Supabase session for JWT
+	const { data: { session } } = await supabase.auth.getSession();
+
+	// Create headers
+	const headers: HeadersInit = {
+		"Content-Type": "application/json",
+	};
+
+	// Add JWT if available
+	if (session?.access_token) {
+		headers['Authorization'] = `Bearer ${session.access_token}`;
+	}
+
 	const response = await fetch(`${API_BASE}/api/character-cards`, {
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
+		headers,
 		body: JSON.stringify(card),
 	});
 
@@ -254,11 +299,22 @@ export async function getLatestCharacterConversation(
 ): Promise<Conversation | null> {
 	const sid = sessionId || getOrCreateSessionId();
 
+	// Get Supabase session for JWT
+	const { data: { session } } = await supabase.auth.getSession();
+
+	// Create headers
+	const headers: HeadersInit = {
+		"X-Session-ID": sid,
+	};
+
+	// Add JWT if available
+	if (session?.access_token) {
+		headers['Authorization'] = `Bearer ${session.access_token}`;
+	}
+
 	const response = await fetch(`${API_BASE}/api/conversations/active/${characterId}?sessionId=${sid}`, {
 		method: "GET",
-		headers: {
-			"X-Session-ID": sid,
-		},
+		headers,
 	});
 
 	if (!response.ok) {
@@ -279,8 +335,20 @@ export async function getLatestCharacterConversation(
  * Delete a character card
  */
 export async function deleteCharacterCard(id: string): Promise<void> {
+	// Get Supabase session for JWT
+	const { data: { session } } = await supabase.auth.getSession();
+
+	// Create headers
+	const headers: HeadersInit = {};
+
+	// Add JWT if available
+	if (session?.access_token) {
+		headers['Authorization'] = `Bearer ${session.access_token}`;
+	}
+
 	const response = await fetch(`${API_BASE}/api/character-cards/${id}`, {
 		method: "DELETE",
+		headers,
 	});
 
 	if (!response.ok) {
@@ -295,8 +363,18 @@ export async function uploadImage(file: File): Promise<{ url: string; key: strin
 	const formData = new FormData();
 	formData.append("file", file);
 
+	// Get Supabase session
+	const { data: { session } } = await supabase.auth.getSession();
+
+	// Create headers with authorization token if session exists
+	const headers: HeadersInit = {};
+	if (session?.access_token) {
+		headers['Authorization'] = `Bearer ${session.access_token}`;
+	}
+
 	const response = await fetch(`${API_BASE}/api/upload`, {
 		method: "POST",
+		headers,
 		body: formData,
 	});
 
@@ -314,11 +392,22 @@ export async function updateCharacterCard(
 	id: string,
 	card: CharacterCardV3
 ): Promise<CharacterCardListItem> {
+	// Get Supabase session for JWT
+	const { data: { session } } = await supabase.auth.getSession();
+
+	// Create headers
+	const headers: HeadersInit = {
+		"Content-Type": "application/json",
+	};
+
+	// Add JWT if available
+	if (session?.access_token) {
+		headers['Authorization'] = `Bearer ${session.access_token}`;
+	}
+
 	const response = await fetch(`${API_BASE}/api/character-cards/${id}`, {
 		method: "PUT",
-		headers: {
-			"Content-Type": "application/json",
-		},
+		headers,
 		body: JSON.stringify(card),
 	});
 

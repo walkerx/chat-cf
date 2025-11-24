@@ -7,8 +7,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { CharacterCardListItem } from "../services/api.js";
-import { listCharacterCards, listConversations, deleteCharacterCard } from "../services/api.js";
-import { getOrCreateSessionId } from "../services/session.js";
+import { listCharacterCards, deleteCharacterCard } from "../services/api.js";
 import { useAuth } from "../contexts/AuthContext.js";
 import { GalleryGrid } from "../components/GalleryGrid.js";
 import { GalleryHeader } from "../components/GalleryHeader.js";
@@ -40,45 +39,28 @@ export function GalleryPage() {
 		conversationCount: number;
 	} | null>(null);
 	const [editingCharacter, setEditingCharacter] = useState<CharacterCardListItem | null>(null);
-	const sessionId = getOrCreateSessionId();
 	const navigate = useNavigate();
 	const { user, signOut } = useAuth();
 	const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
-	// Load characters and their conversation history
+	// Load characters only
 	useEffect(() => {
-		async function loadCharactersWithHistory() {
+		async function loadCharacters() {
 			try {
 				setLoading(true);
 				setError(null);
 
 				const cards = await listCharacterCards();
-				const conversations = await listConversations(sessionId);
 
-				// Map conversations to characters
-				const charactersWithHistory = cards.map((card) => {
-					const characterConversations = conversations.filter(
-						(c) => c.character_card_id === card.id
-					);
+				// Map cards to the structure without conversation history
+				const characters = cards.map((card) => ({
+					card,
+					conversationCount: 0,
+					lastMessageAt: undefined,
+					lastMessagePreview: undefined,
+				}));
 
-					// Find most recent conversation
-					const mostRecent = characterConversations.length > 0
-						? characterConversations.reduce((latest, current) =>
-							new Date(current.updated_at) > new Date(latest.updated_at)
-								? current
-								: latest
-						)
-						: null;
-
-					return {
-						card,
-						conversationCount: characterConversations.length,
-						lastMessageAt: mostRecent?.updated_at,
-						lastMessagePreview: mostRecent?.title || undefined,
-					};
-				});
-
-				setCharacters(charactersWithHistory);
+				setCharacters(characters);
 			} catch (err) {
 				console.error("Failed to load characters:", err);
 
@@ -89,10 +71,6 @@ export function GalleryPage() {
 					// Network errors
 					if (errorMessage.includes("network") || errorMessage.includes("fetch") || errorMessage.includes("failed to fetch")) {
 						setError(t('error.network'));
-					}
-					// Failed to load conversations (non-critical)
-					else if (errorMessage.includes("conversation")) {
-						setError(t('gallery.loadError') + '. ' + t('gallery.noCharacters'));
 					}
 					// Generic error
 					else {
@@ -106,8 +84,8 @@ export function GalleryPage() {
 			}
 		}
 
-		loadCharactersWithHistory();
-	}, [sessionId]);
+		loadCharacters();
+	}, []);
 
 	// Filter characters based on debounced search query
 	// Memoized to avoid recalculating on every render
